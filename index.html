@@ -26,7 +26,7 @@
 
         .square-container {
             position: relative;
-            /* 正方形の幅200px + (200px/3 * 2) = 約333px */
+            /* 正方形200px + (200px/3 * 2) = 333.3px */
             width: 333.3px; 
             height: 200px;
             display: flex;
@@ -34,18 +34,16 @@
             align-items: center;
         }
 
-        /* エンター後に表示される帯（左右に1/3ずつ長い） */
         #inputBand {
             position: absolute;
             top: 0;
-            width: 100%; /* 親要素(333.3px)いっぱいに広がる */
+            width: 100%;
             height: 100%;
             display: none;
             z-index: 1;
             border-radius: 4px;
         }
 
-        /* お題となる中央の正方形 */
         #targetSquare {
             width: 200px;
             height: 200px;
@@ -54,13 +52,12 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center; /* 中央配置 */
+            justify-content: center;
             position: relative;
             box-sizing: border-box;
             border-radius: 4px;
         }
 
-        /* 中央の一致率（％） */
         #scoreText {
             font-size: 32px;
             font-weight: bold;
@@ -68,9 +65,8 @@
             margin-bottom: 10px;
         }
 
-        /* 下部のカラーコード（答え） */
         #answerText {
-            font-size: 20px; /* ％より少し小さい */
+            font-size: 20px;
             font-family: monospace;
             font-weight: bold;
             letter-spacing: 1px;
@@ -97,11 +93,6 @@
 
         #colorInput:focus {
             border-color: #888;
-        }
-
-        #colorInput:disabled {
-            background-color: #fff;
-            color: #333;
         }
     </style>
 </head>
@@ -147,16 +138,12 @@
         return (yiq >= 128) ? '#000000' : '#FFFFFF';
     }
 
-    // 色の一致率を計算する関数
     function calculateMatch(hex1, hex2) {
         const r1 = parseInt(hex1.substring(0, 2), 16), g1 = parseInt(hex1.substring(2, 4), 16), b1 = parseInt(hex1.substring(4, 6), 16);
         const r2 = parseInt(hex2.substring(0, 2), 16), g2 = parseInt(hex2.substring(2, 4), 16), b2 = parseInt(hex2.substring(4, 6), 16);
-        
         const diffR = Math.abs(r1 - r2);
         const diffG = Math.abs(g1 - g2);
         const diffB = Math.abs(b1 - b2);
-        
-        // 最大差分は 255 * 3。それに対する現在の差分の割合を出し、100から引く
         const totalDiff = (diffR + diffG + diffB) / (255 * 3);
         const matchPercent = (1 - totalDiff) * 100;
         return matchPercent.toFixed(1);
@@ -165,30 +152,38 @@
     function initGame() {
         targetColor = generateRandomColor();
         targetSquare.style.backgroundColor = '#' + targetColor;
-        
         answerText.textContent = '#' + targetColor;
         answerText.style.color = getContrastColor(targetColor);
         answerText.style.opacity = 0;
-
         scoreText.style.color = getContrastColor(targetColor);
         scoreText.style.opacity = 0;
-
         inputBand.style.display = 'none';
-
         inputField.value = '';
         inputField.disabled = false;
         inputField.focus();
-
         isAnswered = false;
     }
 
+    // 入力時の処理（ここで6桁制限を徹底）
     inputField.addEventListener('input', function() {
         let val = this.value;
+
+        // 全角を半角に
         val = val.replace(/[Ａ-Ｚａ-ｚ０-９]/g, function(s) {
             return String.fromCharCode(s.charCodeAt(0) - 0xFEE0);
         });
+        
+        // 小文字を大文字に
         val = val.toUpperCase();
+        
+        // 16進数以外の文字を削除
         val = val.replace(/[^0-9A-F]/g, '');
+
+        // 【追加】6桁を超える分を即座にカット
+        if (val.length > 6) {
+            val = val.substring(0, 6);
+        }
+
         this.value = val;
     });
 
@@ -196,20 +191,14 @@
         if (e.key === 'Enter') {
             if (!isAnswered) {
                 let userInput = inputField.value;
-                
-                // 6桁でない場合は入力を受け付けない
-                if (userInput.length !== 6) return;
+                if (userInput.length !== 6) return; 
 
-                // 判定表示
                 inputBand.style.backgroundColor = '#' + userInput;
                 inputBand.style.display = 'block';
 
-                // 一致率の表示
                 const match = calculateMatch(targetColor, userInput);
                 scoreText.textContent = match + '%';
                 scoreText.style.opacity = 1;
-
-                // 答えの表示
                 answerText.style.opacity = 1;
 
                 inputField.disabled = true;
