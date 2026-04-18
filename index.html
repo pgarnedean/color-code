@@ -26,21 +26,23 @@
 
         .square-container {
             position: relative;
-            width: 100%;
+            /* 正方形の幅200px + (200px/3 * 2) = 約333px */
+            width: 333.3px; 
             height: 200px;
             display: flex;
             justify-content: center;
+            align-items: center;
         }
 
-        /* エンター後に表示される画面端まで広がる帯 */
+        /* エンター後に表示される帯（左右に1/3ずつ長い） */
         #inputBand {
             position: absolute;
             top: 0;
-            left: 0;
-            width: 100%;
+            width: 100%; /* 親要素(333.3px)いっぱいに広がる */
             height: 100%;
             display: none;
             z-index: 1;
+            border-radius: 4px;
         }
 
         /* お題となる中央の正方形 */
@@ -48,23 +50,33 @@
             width: 200px;
             height: 200px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-            z-index: 2; /* 帯より手前に表示 */
+            z-index: 2;
             display: flex;
-            align-items: flex-end;
-            justify-content: center;
-            padding-bottom: 15px;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center; /* 中央配置 */
+            position: relative;
             box-sizing: border-box;
-            border-radius: 4px; /* お好みで削除可能 */
+            border-radius: 4px;
         }
 
-        /* 答えのカラーコードテキスト */
+        /* 中央の一致率（％） */
+        #scoreText {
+            font-size: 32px;
+            font-weight: bold;
+            opacity: 0;
+            margin-bottom: 10px;
+        }
+
+        /* 下部のカラーコード（答え） */
         #answerText {
-            font-size: 24px;
+            font-size: 20px; /* ％より少し小さい */
             font-family: monospace;
             font-weight: bold;
-            letter-spacing: 2px;
+            letter-spacing: 1px;
             opacity: 0;
-            transition: opacity 0.2s;
+            position: absolute;
+            bottom: 15px;
         }
 
         .input-container {
@@ -90,7 +102,6 @@
         #colorInput:disabled {
             background-color: #fff;
             color: #333;
-            border-color: #ccc;
         }
     </style>
 </head>
@@ -100,11 +111,12 @@
     <div class="square-container">
         <div id="inputBand"></div>
         <div id="targetSquare">
+            <span id="scoreText"></span>
             <span id="answerText"></span>
         </div>
     </div>
     <div class="input-container">
-        <input type="text" id="colorInput" maxlength="6" placeholder="XXXXXX" autocomplete="off" autofocus>
+        <input type="text" id="colorInput" maxlength="6" placeholder="000000" autocomplete="off" autofocus>
     </div>
 </div>
 
@@ -115,9 +127,9 @@
     const targetSquare = document.getElementById('targetSquare');
     const inputBand = document.getElementById('inputBand');
     const answerText = document.getElementById('answerText');
+    const scoreText = document.getElementById('scoreText');
     const inputField = document.getElementById('colorInput');
 
-    // ランダムな6桁のカラーコードを生成する関数
     function generateRandomColor() {
         const letters = '0123456789ABCDEF';
         let color = '';
@@ -127,17 +139,29 @@
         return color;
     }
 
-    // 色の明るさ（輝度）を計算し、見やすい文字色（白か黒）を返す関数
     function getContrastColor(hex) {
         const r = parseInt(hex.substring(0, 2), 16);
         const g = parseInt(hex.substring(2, 4), 16);
         const b = parseInt(hex.substring(4, 6), 16);
-        // YIQ式を用いた輝度計算
         const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
         return (yiq >= 128) ? '#000000' : '#FFFFFF';
     }
 
-    // ゲームを初期状態にリセットする関数
+    // 色の一致率を計算する関数
+    function calculateMatch(hex1, hex2) {
+        const r1 = parseInt(hex1.substring(0, 2), 16), g1 = parseInt(hex1.substring(2, 4), 16), b1 = parseInt(hex1.substring(4, 6), 16);
+        const r2 = parseInt(hex2.substring(0, 2), 16), g2 = parseInt(hex2.substring(2, 4), 16), b2 = parseInt(hex2.substring(4, 6), 16);
+        
+        const diffR = Math.abs(r1 - r2);
+        const diffG = Math.abs(g1 - g2);
+        const diffB = Math.abs(b1 - b2);
+        
+        // 最大差分は 255 * 3。それに対する現在の差分の割合を出し、100から引く
+        const totalDiff = (diffR + diffG + diffB) / (255 * 3);
+        const matchPercent = (1 - totalDiff) * 100;
+        return matchPercent.toFixed(1);
+    }
+
     function initGame() {
         targetColor = generateRandomColor();
         targetSquare.style.backgroundColor = '#' + targetColor;
@@ -145,6 +169,9 @@
         answerText.textContent = '#' + targetColor;
         answerText.style.color = getContrastColor(targetColor);
         answerText.style.opacity = 0;
+
+        scoreText.style.color = getContrastColor(targetColor);
+        scoreText.style.opacity = 0;
 
         inputBand.style.display = 'none';
 
@@ -155,53 +182,44 @@
         isAnswered = false;
     }
 
-    // 入力制限と自動変換処理
     inputField.addEventListener('input', function() {
         let val = this.value;
-
-        // 全角英数字を半角に変換
         val = val.replace(/[Ａ-Ｚａ-ｚ０-９]/g, function(s) {
             return String.fromCharCode(s.charCodeAt(0) - 0xFEE0);
         });
-
-        // 小文字を大文字に変換
         val = val.toUpperCase();
-
-        // 指定文字（0-9, A-F）以外を削除
         val = val.replace(/[^0-9A-F]/g, '');
-
         this.value = val;
     });
 
-    // エンターキー押下時の処理
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Enter') {
             if (!isAnswered) {
-                // 解答フェーズ
                 let userInput = inputField.value;
-                if (userInput.length === 0) return; // 空欄なら何もしない
+                
+                // 6桁でない場合は入力を受け付けない
+                if (userInput.length !== 6) return;
 
-                // 万が一入力が6桁未満の場合は0で埋める
-                userInput = userInput.padEnd(6, '0');
-
-                // 帯を入力された色にして表示
+                // 判定表示
                 inputBand.style.backgroundColor = '#' + userInput;
                 inputBand.style.display = 'block';
+
+                // 一致率の表示
+                const match = calculateMatch(targetColor, userInput);
+                scoreText.textContent = match + '%';
+                scoreText.style.opacity = 1;
 
                 // 答えの表示
                 answerText.style.opacity = 1;
 
-                // 入力欄を無効化
                 inputField.disabled = true;
                 isAnswered = true;
             } else {
-                // リセットフェーズ（次へ）
                 initGame();
             }
         }
     });
 
-    // ページ読み込み時にゲームを開始
     initGame();
 </script>
 
