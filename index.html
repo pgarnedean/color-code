@@ -91,10 +91,11 @@
             gap: 12px; 
         }
 
+        /* 修正: 入力欄を少し大きくしました */
         #colorInput {
-            width: 240px;
-            height: 50px;
-            font-size: 28px;
+            width: 260px;
+            height: 60px;
+            font-size: 32px;
             letter-spacing: 2px;
             text-align: center;
             font-family: monospace;
@@ -113,9 +114,10 @@
             color: #333;
         }
 
+        /* 修正: プレビューの円を少し大きくしました */
         #colorPreview {
-            width: 50px; 
-            height: 50px;
+            width: 60px; 
+            height: 60px;
             border-radius: 50%;
             border: 2px solid #ccc;
             box-sizing: border-box;
@@ -389,13 +391,29 @@
         return advices[Math.floor(Math.random() * advices.length)];
     }
 
+    /* 修正: 回答後もリアルタイムで円の色とパーセンテージが更新されるようにしました */
     function updatePreview() {
         const val = inputField.value;
         if (val.length === 6) {
             colorPreview.style.backgroundColor = '#' + val;
             colorPreview.style.opacity = '1';
+            
+            // 回答後（isAnsweredがtrue）の場合、パーセンテージなどもリアルタイム更新
+            if (isAnswered) {
+                const match = calculateMatch(targetColor, val);
+                scoreText.textContent = match + '%';
+                scoreText.style.opacity = 1;
+                inputBand.style.backgroundColor = '#' + val;
+                inputBand.style.display = 'block';
+            }
         } else {
             colorPreview.style.opacity = '0';
+            
+            // 6文字未満の時はパーセンテージ等を一時的に隠す
+            if (isAnswered) {
+                scoreText.style.opacity = 0;
+                inputBand.style.display = 'none';
+            }
         }
     }
 
@@ -440,17 +458,11 @@
             adviceText.textContent = getAdvice(targetColor, userInput);
             adviceText.style.opacity = 1;
 
-            inputField.disabled = true;
-            
-            document.querySelectorAll('.key-btn').forEach(btn => {
-                if (!btn.classList.contains('key-enter')) {
-                    btn.style.opacity = '0.5';
-                    btn.style.pointerEvents = 'none';
-                }
-            });
+            /* 修正: キーボードや入力欄の無効化処理を削除し、再入力可能にしました */
             
             isAnswered = true;
         } else {
+            /* 修正: isAnswered が true の状態でエンターを押すと次の問題へ */
             initGame();
         }
     }
