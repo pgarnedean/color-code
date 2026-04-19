@@ -22,8 +22,6 @@
             flex-direction: column;
             align-items: center;
             position: relative;
-            padding: 20px;
-            box-sizing: border-box;
         }
 
         .square-container {
@@ -77,88 +75,30 @@
         }
 
         .input-container {
-            margin-top: 30px;
+            margin-top: 40px;
             z-index: 2;
         }
 
         #colorInput {
             width: 240px;
             height: 50px;
-            font-size: 28px;
-            letter-spacing: 2px;
+            font-size: 24px;
             text-align: center;
             font-family: monospace;
             border: 2px solid #ccc;
             border-radius: 4px;
             outline: none;
-            background-color: #fff;
         }
 
         #colorInput:focus {
             border-color: #888;
         }
-
+        
+        /* 無効化時も文字が見えるように調整 */
         #colorInput:disabled {
-            background-color: #eee;
+            background-color: #fff;
             color: #333;
         }
-
-        /* --- 専用キーボードのスタイル --- */
-        #customKeyboard {
-            display: none; /* デフォルト（PC等）では非表示 */
-            grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
-            margin-top: 20px;
-            width: 100%;
-            max-width: 320px;
-        }
-
-        /* 画面幅が768px以下（スマホ等）の場合のみキーボードを表示 */
-        @media (max-width: 768px) {
-            #customKeyboard {
-                display: grid;
-            }
-        }
-
-        .key-btn {
-            background: #fff;
-            border: 2px solid #ddd;
-            border-radius: 6px;
-            font-size: 22px;
-            font-family: monospace;
-            padding: 12px 0;
-            cursor: pointer;
-            font-weight: bold;
-            color: #333;
-            box-shadow: 0 3px 0 #ddd;
-            transition: all 0.1s;
-            /* スマホでのタップ時のハイライトを無効化 */
-            -webkit-tap-highlight-color: transparent; 
-        }
-
-        .key-btn:active {
-            transform: translateY(3px);
-            box-shadow: 0 0 0 #ddd;
-        }
-
-        .key-del {
-            grid-column: span 2; /* 2マス分の幅 */
-            background: #ffebee;
-            border-color: #ffcdd2;
-            color: #d32f2f;
-            box-shadow: 0 3px 0 #ffcdd2;
-        }
-        .key-del:active { box-shadow: 0 0 0 #ffcdd2; }
-
-        .key-enter {
-            grid-column: span 2; /* 2マス分の幅 */
-            background: #e8f5e9;
-            border-color: #c8e6c9;
-            color: #2e7d32;
-            box-shadow: 0 3px 0 #c8e6c9;
-        }
-        .key-enter:active { box-shadow: 0 0 0 #c8e6c9; }
-
     </style>
 </head>
 <body>
@@ -171,47 +111,21 @@
             <span id="answerText"></span>
         </div>
     </div>
-    
     <div class="input-container">
-        <input type="text" id="colorInput" maxlength="6" placeholder="000000" autocomplete="off" autofocus inputmode="none">
-    </div>
-
-    <div id="customKeyboard">
-        <button class="key-btn">0</button>
-        <button class="key-btn">1</button>
-        <button class="key-btn">2</button>
-        <button class="key-btn">3</button>
-        
-        <button class="key-btn">4</button>
-        <button class="key-btn">5</button>
-        <button class="key-btn">6</button>
-        <button class="key-btn">7</button>
-        
-        <button class="key-btn">8</button>
-        <button class="key-btn">9</button>
-        <button class="key-btn">A</button>
-        <button class="key-btn">B</button>
-        
-        <button class="key-btn">C</button>
-        <button class="key-btn">D</button>
-        <button class="key-btn">E</button>
-        <button class="key-btn">F</button>
-        
-        <button class="key-btn key-del">DEL</button>
-        <button class="key-btn key-enter">Enter</button>
+        <input type="text" id="colorInput" maxlength="6" placeholder="000000" autocomplete="off" autofocus>
     </div>
 </div>
 
 <script>
     let isAnswered = false;
     let targetColor = '';
+    let deleteTimer = null; // 長押し判定用
 
     const targetSquare = document.getElementById('targetSquare');
     const inputBand = document.getElementById('inputBand');
     const answerText = document.getElementById('answerText');
     const scoreText = document.getElementById('scoreText');
     const inputField = document.getElementById('colorInput');
-    const customKeyboard = document.getElementById('customKeyboard');
 
     function generateRandomColor() {
         const letters = '0123456789ABCDEF';
@@ -241,7 +155,6 @@
         return matchPercent.toFixed(1);
     }
 
-    // ゲームリセット処理
     function initGame() {
         targetColor = generateRandomColor();
         targetSquare.style.backgroundColor = '#' + targetColor;
@@ -252,44 +165,13 @@
         scoreText.style.opacity = 0;
         inputBand.style.display = 'none';
         
-        inputField.value = '';
         inputField.disabled = false;
+        inputField.value = '';
         inputField.focus();
-
-        // キーボードを有効化
-        customKeyboard.style.opacity = '1';
-        customKeyboard.style.pointerEvents = 'auto';
-
         isAnswered = false;
     }
 
-    // エンター（解答＆次へ）の共通処理
-    function handleEnter() {
-        if (!isAnswered) {
-            let userInput = inputField.value;
-            if (userInput.length !== 6) return; // 6桁以外は無効
-
-            inputBand.style.backgroundColor = '#' + userInput;
-            inputBand.style.display = 'block';
-
-            const match = calculateMatch(targetColor, userInput);
-            scoreText.textContent = match + '%';
-            scoreText.style.opacity = 1;
-            answerText.style.opacity = 1;
-
-            inputField.disabled = true;
-            
-            // キーボードを無効化（半透明にして押せなくする）
-            customKeyboard.style.opacity = '0.5';
-            customKeyboard.style.pointerEvents = 'none';
-            
-            isAnswered = true;
-        } else {
-            initGame();
-        }
-    }
-
-    // パソコンの物理キーボード入力制限処理
+    // 入力制限と自動変換
     inputField.addEventListener('input', function() {
         let val = this.value;
         val = val.replace(/[Ａ-Ｚａ-ｚ０-９]/g, function(s) {
@@ -301,34 +183,46 @@
         this.value = val;
     });
 
-    // パソコンのエンターキー監視
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') {
-            handleEnter();
+    // DEL長押しで全削除の処理
+    inputField.addEventListener('keydown', function(e) {
+        if (e.key === 'Backspace' || e.key === 'Delete') {
+            if (!deleteTimer) {
+                deleteTimer = setTimeout(() => {
+                    inputField.value = '';
+                }, 500); // 0.5秒長押しで全削除
+            }
         }
     });
 
-    // 専用キーボードのボタンクリック処理
-    document.querySelectorAll('.key-btn').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            // フォーカスが外れるのを防ぐ（PC等での挙動安定のため）
-            e.preventDefault(); 
-            
-            const keyText = this.textContent;
+    inputField.addEventListener('keyup', function(e) {
+        if (e.key === 'Backspace' || e.key === 'Delete') {
+            clearTimeout(deleteTimer);
+            deleteTimer = null;
+        }
+    });
 
-            if (keyText === 'DEL') {
-                // 1文字削除
-                inputField.value = inputField.value.slice(0, -1);
-            } else if (keyText === 'Enter') {
-                // エンター処理
-                handleEnter();
+    // キーボード全体のイベント監視
+    window.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            if (!isAnswered) {
+                let userInput = inputField.value;
+                if (userInput.length !== 6) return; 
+
+                inputBand.style.backgroundColor = '#' + userInput;
+                inputBand.style.display = 'block';
+
+                const match = calculateMatch(targetColor, userInput);
+                scoreText.textContent = match + '%';
+                scoreText.style.opacity = 1;
+                answerText.style.opacity = 1;
+
+                inputField.disabled = true; // 入力をロック
+                isAnswered = true;
             } else {
-                // 文字入力（6桁未満の場合のみ追加）
-                if (inputField.value.length < 6) {
-                    inputField.value += keyText;
-                }
+                // 答え表示後はエンターで次へ進む
+                initGame();
             }
-        });
+        }
     });
 
     initGame();
