@@ -123,21 +123,6 @@
             transition: opacity 0.2s, background-color 0.2s;
         }
 
-        /* アドバイス表示用のスタイルを追加 */
-        #adviceText {
-            margin-top: 15px;
-            font-size: 14px;
-            color: #444;
-            text-align: center;
-            width: 100%;
-            max-width: 320px;
-            min-height: 42px; /* 高さを確保してレイアウトのガタつきを防ぐ */
-            opacity: 0;
-            transition: opacity 0.3s;
-            font-weight: bold;
-            line-height: 1.4;
-        }
-
         #customKeyboard {
             display: none;
             grid-template-columns: repeat(4, 1fr);
@@ -209,7 +194,6 @@
             <input type="text" id="colorInput" maxlength="6" placeholder="000000" autocomplete="off" autofocus inputmode="none">
             <div id="colorPreview"></div>
         </div>
-        <div id="adviceText"></div>
     </div>
 
     <div id="customKeyboard">
@@ -250,7 +234,6 @@
     const inputField = document.getElementById('colorInput');
     const customKeyboard = document.getElementById('customKeyboard');
     const colorPreview = document.getElementById('colorPreview');
-    const adviceText = document.getElementById('adviceText'); // 追加
 
     function generateRandomColor() {
         const letters = '0123456789ABCDEF';
@@ -286,129 +269,6 @@
         return matchPercent.toFixed(1);
     }
 
-    // --- ここからアドバイス生成機能 ---
-    function getAdvice(targetHex, userHex) {
-        const tr = parseInt(targetHex.substring(0, 2), 16), tg = parseInt(targetHex.substring(2, 4), 16), tb = parseInt(targetHex.substring(4, 6), 16);
-        const ur = parseInt(userHex.substring(0, 2), 16), ug = parseInt(userHex.substring(2, 4), 16), ub = parseInt(userHex.substring(4, 6), 16);
-
-        const diffR = tr - ur;
-        const diffG = tg - ug;
-        const diffB = tb - ub;
-
-        const absR = Math.abs(diffR);
-        const absG = Math.abs(diffG);
-        const absB = Math.abs(diffB);
-
-        const maxDiff = Math.max(absR, absG, absB);
-
-        if (maxDiff === 0) return "完璧です！100%一致！カラーコードの達人ですね！";
-        
-        let advices = [];
-
-        // 全体的な明暗のアドバイス (全体的に大きく外れている場合)
-        const targetLum = tr + tg + tb;
-        const userLum = ur + ug + ub;
-        if (Math.abs(targetLum - userLum) > 200 && maxDiff < 100) {
-            if (targetLum > userLum) {
-                advices = [
-                    "全体的にもっと明るい色でした。RGBすべての数字を大きく（F寄りに）してみましょう！",
-                    "カラーコードは白（FFFFFF）に近づくほど明るくなります。全体的にもう少し大きな英数字を使うのがコツです。",
-                    "もう少し白みがかった明るい色です。3色ともFに近い値にシフトさせると近づきますよ。"
-                ];
-            } else {
-                advices = [
-                    "全体的にもっと暗い色でした。RGBすべての数字を小さく（0寄りに）してみましょう！",
-                    "カラーコードは黒（000000）に近づくほど暗くなります。全体的にもう少し小さな数字を使うのがコツです。",
-                    "もう少し黒みがかった落ち着いた色です。3色とも0に近い値にシフトさせると近づきます。"
-                ];
-            }
-            return advices[Math.floor(Math.random() * advices.length)];
-        }
-
-        // グレー系のアドバイス
-        const isTargetGray = Math.abs(tr - tg) < 20 && Math.abs(tg - tb) < 20;
-        if (isTargetGray && maxDiff > 30) {
-            advices = [
-                "正解は無彩色（グレー・白・黒）に近い色でした！2桁ごとの数値をすべて同じくらいに揃えるのがポイントです。",
-                "グレー系の色は「R=G=B」になります（例: 888888）。3つの値をもっと均等にしてみましょう！",
-                "どれかの色が強すぎたようです。白黒グレーは3要素（赤・緑・青）のバランスを均一に保つと作れます。"
-            ];
-            return advices[Math.floor(Math.random() * advices.length)];
-        }
-
-        // 一番差が大きい要素に対してのアドバイス
-        if (maxDiff === absR) {
-            if (diffR > 0) {
-                advices = [
-                    "最初の2桁（赤）の数値を大きく（F寄りに）すると正解でした！0よりFに近づけると赤が強くなります。",
-                    "もう少し赤みが必要でしたね。左の2文字を大きく（9やA〜Fへ）してみましょう。",
-                    "光の三原色である『赤』が足りません。最初の2桁をFに近づけてみてください。",
-                    "一番左の「R(赤)」を強めるのが今回の正解への近道でした！",
-                    "赤の成分が不足しています。0〜Fの16進数で、最初の2桁をもっとF方向へ進めてみましょう。"
-                ];
-            } else {
-                advices = [
-                    "最初の2桁（赤）の数値を小さく（0寄りに）すると正解に近づきました。",
-                    "赤みが強すぎたようです。左の2文字をもっと0に近づけてみましょう。",
-                    "光の三原色の『赤』を減らすのがポイントです。最初の2桁の数値を下げてみてください。",
-                    "一番左の「R(赤)」の主張が強すぎました。もう少し数値を0に寄せてみましょう。",
-                    "もう少し赤を抑えると、全体の色が正解にピタッと合います！"
-                ];
-            }
-        } else if (maxDiff === absG) {
-            if (diffG > 0) {
-                advices = [
-                    "真ん中の2桁（緑）の数値を大きく（F寄りに）すると正解でした！",
-                    "もう少し緑色が必要でした。真ん中の2文字を大きく（9やA〜Fへ）してみましょう。",
-                    "光の三原色である『緑』が足りません。真ん中の2桁をFに近づけてみてください。",
-                    "真ん中の「G(緑)」を強めるのが今回の正解への近道でした！",
-                    "緑の成分が不足しています。真ん中の2桁を思い切ってF寄りにしてみてください。"
-                ];
-            } else {
-                advices = [
-                    "真ん中の2桁（緑）の数値を小さく（0寄りに）すると正解に近づきました。",
-                    "緑が強すぎたようです。真ん中の2文字をもっと0に近づけてみましょう。",
-                    "光の三原色の『緑』を減らすのがポイントです。真ん中の2桁の数値を下げてみてください。",
-                    "真ん中の「G(緑)」の主張が強すぎました。もう少し数値を0に寄せてみましょう。",
-                    "もう少し緑を抑えると、全体の色が正解にグッと近づきました！"
-                ];
-            }
-        } else {
-            if (diffB > 0) {
-                advices = [
-                    "最後の2桁（青）の数値を大きく（F寄りに）すると正解でした！",
-                    "もう少し青みが必要でした。右の2文字を大きく（9やA〜Fへ）してみましょう。",
-                    "光の三原色である『青』が足りません。最後の2桁をFに近づけてみてください。",
-                    "一番右の「B(青)」を強めるのが今回の正解への近道でした！",
-                    "もっと青みが必要です！最後の2桁を思い切ってF寄りにしてみてください。"
-                ];
-            } else {
-                advices = [
-                    "最後の2桁（青）の数値を小さく（0寄りに）すると正解に近づきました。",
-                    "青が強すぎたようです。右の2文字をもっと0に近づけてみましょう。",
-                    "光の三原色の『青』を減らすのがポイントです。最後の2桁の数値を下げてみてください。",
-                    "一番右の「B(青)」の主張が強すぎました。もう少し数値を0に寄せてみましょう。",
-                    "もう少し青を抑えると、全体の色が正解にピタッと合いました！"
-                ];
-            }
-        }
-
-        // さらにランダムで豆知識を付与
-        const trivias = [
-            " (※0が一番暗く、Fが一番明るいですよ)",
-            " (※赤+緑で黄色になることも意識してみましょう)",
-            " (※赤+青でマゼンタ(紫)になります)",
-            " (※緑+青でシアン(水色)になります)",
-            "" 
-        ];
-        
-        let selectedAdvice = advices[Math.floor(Math.random() * advices.length)];
-        let randomTrivia = trivias[Math.floor(Math.random() * trivias.length)];
-
-        return selectedAdvice + randomTrivia;
-    }
-    // --- アドバイス機能ここまで ---
-
     function updatePreview() {
         const val = inputField.value;
         if (val.length === 6) {
@@ -434,7 +294,6 @@
         inputField.focus();
 
         updatePreview();
-        adviceText.style.opacity = 0; // 初期化時にアドバイスを隠す
 
         document.querySelectorAll('.key-btn').forEach(btn => {
             btn.style.opacity = '1';
@@ -457,10 +316,6 @@
             scoreText.style.opacity = 1;
             answerText.style.opacity = 1;
 
-            // アドバイスを計算して表示
-            adviceText.textContent = getAdvice(targetColor, userInput);
-            adviceText.style.opacity = 1;
-
             inputField.disabled = true;
             
             document.querySelectorAll('.key-btn').forEach(btn => {
@@ -477,14 +332,33 @@
     }
 
     inputField.addEventListener('input', function() {
+        // 現在のカーソル位置と、それより前のテキストを取得
+        let cursorPosition = this.selectionStart;
+        let textBeforeCursor = this.value.substring(0, cursorPosition);
+
+        // カーソル位置より前にある「有効な文字」の数を数える
+        let validTextBeforeCursor = textBeforeCursor.replace(/[Ａ-Ｚａ-ｚ０-９]/g, function(s) {
+            return String.fromCharCode(s.charCodeAt(0) - 0xFEE0);
+        }).toUpperCase().replace(/[^0-9A-F]/g, '');
+        let newCursorPos = validTextBeforeCursor.length;
+
+        // 全体の変換処理
         let val = this.value;
         val = val.replace(/[Ａ-Ｚａ-ｚ０-９]/g, function(s) {
             return String.fromCharCode(s.charCodeAt(0) - 0xFEE0);
         });
         val = val.toUpperCase();
         val = val.replace(/[^0-9A-F]/g, '');
-        if (val.length > 6) val = val.substring(0, 6);
+        
+        if (val.length > 6) {
+            val = val.substring(0, 6);
+            if (newCursorPos > 6) newCursorPos = 6;
+        }
+
+        // 値を更新し、カーソル位置を復元
         this.value = val;
+        this.setSelectionRange(newCursorPos, newCursorPos);
+
         updatePreview(); 
     });
 
@@ -538,9 +412,17 @@
                 if (keyText === 'Enter') {
                     handleEnter();
                 } else if (inputField.value.length < 6) {
-                    inputField.value += keyText;
+                    // カスタムキーボードから入力した際もカーソル位置に挿入されるように調整
+                    const start = inputField.selectionStart;
+                    const end = inputField.selectionEnd;
+                    const currentVal = inputField.value;
+                    
+                    inputField.value = currentVal.substring(0, start) + keyText + currentVal.substring(end);
+                    inputField.setSelectionRange(start + 1, start + 1);
+                    
                     updatePreview(); 
                 }
+                inputField.focus(); // キーボードを押した後もフォーカスを維持
             });
         }
     });
