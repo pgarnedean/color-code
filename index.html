@@ -14,42 +14,48 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            overflow: hidden; /* PCでの余計なスクロールを防止 */
         }
 
         .game-area {
             width: 100%;
+            height: 100%;
             display: flex;
             flex-direction: column;
+            justify-content: center; /* 垂直中央に配置 */
             align-items: center;
             position: relative;
-            padding: 15px;
+            padding: 20px;
             box-sizing: border-box;
         }
 
-        /* --- PC版（デフォルト）の大きめサイズ設定 --- */
+        /* --- PC版：画面サイズに合わせて可変する設定 --- */
         #scoreText {
-            font-size: 48px; /* 大きく表示 */
+            font-size: clamp(32px, 8vh, 60px); /* 画面の高さに応じて可変 */
             font-weight: bold;
             opacity: 0;
-            height: 56px;
+            height: 1.2em;
             color: #333;
-            margin-bottom: 15px;
+            margin-bottom: 2vh;
             transition: opacity 0.3s;
         }
 
         .square-container {
             display: flex;
-            gap: 25px;
+            gap: 3vw;
             justify-content: center;
             align-items: center;
             width: 100%;
-            margin-bottom: 15px;
+            margin-bottom: 3vh;
         }
 
         #targetSquare, #userSquare {
-            width: 250px; /* PCでは大きく */
-            height: 250px;
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+            /* 画面の高さの約35%を基準にする */
+            width: 35vh; 
+            height: 35vh;
+            max-width: 40vw; /* 横幅が狭い場合への考慮 */
+            max-height: 400px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
             z-index: 2;
             display: flex;
             flex-direction: column;
@@ -57,14 +63,16 @@
             justify-content: center;
             position: relative;
             box-sizing: border-box;
-            border-radius: 6px;
-            transition: width 0.3s, height 0.3s;
+            border-radius: 8px;
+            transition: all 0.3s ease;
         }
 
-        /* 未回答時はさらに大きく表示 */
+        /* 未回答時は中央に大きく表示 */
         #targetSquare.unanswered {
-            width: 320px;
-            height: 320px;
+            width: 45vh;
+            height: 45vh;
+            max-width: 80vw;
+            max-height: 500px;
         }
 
         #userSquare {
@@ -72,23 +80,23 @@
         }
 
         #answerText, #userAnswerText {
-            font-size: 28px; /* フォントも調整 */
+            font-size: clamp(18px, 4vh, 32px);
             font-family: monospace;
             font-weight: bold;
             letter-spacing: 1px;
             opacity: 0;
             position: absolute;
-            bottom: 20px;
+            bottom: 10%;
             transition: opacity 0.3s;
         }
 
         #realtimeRow {
             display: none;
             align-items: center;
+            justify-content: center;
             width: 100%;
-            max-width: 450px;
-            height: 80px;
-            margin-top: 15px;
+            height: 8vh;
+            margin-top: 1vh;
         }
 
         #realtimeRow #colorPreview {
@@ -97,20 +105,20 @@
 
         #realtimeCode {
             font-family: monospace;
-            font-size: 30px;
+            font-size: clamp(20px, 4vh, 34px);
             font-weight: bold;
             color: #333;
             margin-right: 20px;
         }
 
         #realtimeMatch {
-            font-size: 34px;
+            font-size: clamp(24px, 5vh, 40px);
             font-weight: bold;
             color: #333;
         }
 
         .input-container {
-            margin-top: 20px;
+            margin-top: 2vh;
             z-index: 2;
             display: flex;
             flex-direction: column;
@@ -125,9 +133,9 @@
         }
 
         #colorInput {
-            width: 320px;
-            height: 75px;
-            font-size: 42px;
+            width: clamp(200px, 40vw, 400px);
+            height: clamp(50px, 8vh, 80px);
+            font-size: clamp(24px, 5vh, 42px);
             letter-spacing: 2px;
             text-align: center;
             font-family: monospace;
@@ -138,8 +146,8 @@
         }
 
         #colorPreview {
-            width: 75px; 
-            height: 75px;
+            width: clamp(50px, 8vh, 80px); 
+            height: clamp(50px, 8vh, 80px);
             border-radius: 50%;
             border: 2px solid #ccc;
             box-sizing: border-box;
@@ -148,13 +156,13 @@
         }
 
         #adviceText {
-            margin-top: 15px;
-            font-size: 18px;
+            margin-top: 1.5vh;
+            font-size: clamp(14px, 2.5vh, 20px);
             color: #444;
             text-align: center;
-            width: 100%;
-            max-width: 500px;
-            min-height: 50px; 
+            width: 90%;
+            max-width: 600px;
+            min-height: 3em; 
             opacity: 0;
             transition: opacity 0.3s;
             font-weight: bold;
@@ -165,12 +173,12 @@
             display: none;
             grid-template-columns: repeat(4, 1fr);
             gap: 8px;
-            margin-top: 5px;
+            margin-top: 10px;
             width: 100%;
             max-width: 320px;
         }
 
-        /* --- スマホ・モバイル版の調整（キーボードと共存するためのサイズ縮小） --- */
+        /* --- モバイル・スマホ版（キーボード表示時などのサイズ調整） --- */
         @media (max-width: 768px) {
             #customKeyboard {
                 display: grid;
@@ -191,6 +199,7 @@
             #adviceText { margin-top: 5px; min-height: 38px; font-size: 13px; max-width: 320px; }
             .key-btn { padding: 10px 0; font-size: 20px; }
             .input-container { margin-top: 10px; }
+            body { overflow-y: auto; } /* 小さい画面ではスクロールを許可 */
         }
 
         .key-btn {
@@ -287,6 +296,7 @@
 </div>
 
 <script>
+    /* JavaScriptロジックは一切変更なし */
     let isAnswered = false;
     let targetColor = '';
     let delTimer = null;
