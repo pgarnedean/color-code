@@ -22,32 +22,33 @@
             flex-direction: column;
             align-items: center;
             position: relative;
-            padding: 20px;
+            padding: 15px;
             box-sizing: border-box;
         }
 
+        /* 2つの正方形の間の上のパーセンテージ */
+        #scoreText {
+            font-size: 32px;
+            font-weight: bold;
+            opacity: 0;
+            height: 38px;
+            color: #333;
+            margin-bottom: 5px;
+            transition: opacity 0.3s;
+        }
+
         .square-container {
-            position: relative;
-            width: 333.3px; 
-            height: 200px;
             display: flex;
+            gap: 15px;
             justify-content: center;
             align-items: center;
-        }
-
-        #inputBand {
-            position: absolute;
-            top: 0;
             width: 100%;
-            height: 100%;
-            display: none;
-            z-index: 1;
-            border-radius: 4px;
+            margin-bottom: 5px;
         }
 
-        #targetSquare {
-            width: 200px;
-            height: 200px;
+        #targetSquare, #userSquare {
+            width: 150px;
+            height: 150px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
             z-index: 2;
             display: flex;
@@ -57,16 +58,20 @@
             position: relative;
             box-sizing: border-box;
             border-radius: 4px;
+            transition: width 0.3s, height 0.3s;
         }
 
-        #scoreText {
-            font-size: 32px;
-            font-weight: bold;
-            opacity: 0;
-            margin-bottom: 10px;
+        /* 未回答時は大きめに表示 */
+        #targetSquare.unanswered {
+            width: 200px;
+            height: 200px;
         }
 
-        #answerText {
+        #userSquare {
+            display: none;
+        }
+
+        #answerText, #userAnswerText {
             font-size: 20px;
             font-family: monospace;
             font-weight: bold;
@@ -74,10 +79,40 @@
             opacity: 0;
             position: absolute;
             bottom: 15px;
+            transition: opacity 0.3s;
+        }
+
+        /* 結果表示時のリアルタイムプレビュー行 */
+        #realtimeRow {
+            display: none;
+            align-items: center;
+            width: 100%;
+            max-width: 320px;
+            height: 60px;
+            margin-top: 10px;
+        }
+
+        /* realtimeRow内に移動した円の右側の余白 */
+        #realtimeRow #colorPreview {
+            margin-right: 15px;
+        }
+
+        #realtimeCode {
+            font-family: monospace;
+            font-size: 22px;
+            font-weight: bold;
+            color: #333;
+            margin-right: 15px;
+        }
+
+        #realtimeMatch {
+            font-size: 26px;
+            font-weight: bold;
+            color: #333;
         }
 
         .input-container {
-            margin-top: 30px;
+            margin-top: 15px;
             z-index: 2;
             display: flex;
             flex-direction: column;
@@ -91,7 +126,6 @@
             gap: 12px; 
         }
 
-        /* 修正: 入力欄を少し大きくしました */
         #colorInput {
             width: 260px;
             height: 60px;
@@ -109,12 +143,6 @@
             border-color: #888;
         }
 
-        #colorInput:disabled {
-            background-color: #eee;
-            color: #333;
-        }
-
-        /* 修正: プレビューの円を少し大きくしました */
         #colorPreview {
             width: 60px; 
             height: 60px;
@@ -126,7 +154,7 @@
         }
 
         #adviceText {
-            margin-top: 15px;
+            margin-top: 10px;
             font-size: 14px;
             color: #444;
             text-align: center;
@@ -143,7 +171,7 @@
             display: none;
             grid-template-columns: repeat(4, 1fr);
             gap: 8px;
-            margin-top: 10px;
+            margin-top: 5px;
             width: 100%;
             max-width: 320px;
         }
@@ -152,6 +180,20 @@
             #customKeyboard {
                 display: grid;
             }
+        }
+
+        /* スマホ等でキーボードが消えないように高さを自動縮小 */
+        @media (max-height: 750px), (max-width: 400px) {
+            #targetSquare.unanswered { width: 160px; height: 160px; }
+            #targetSquare, #userSquare { width: 130px; height: 130px; }
+            .square-container { gap: 10px; }
+            #scoreText { font-size: 28px; height: 32px; }
+            #colorInput { width: 220px; height: 50px; font-size: 26px; }
+            #colorPreview { width: 50px; height: 50px; }
+            #realtimeRow { height: 50px; margin-top: 5px; }
+            #adviceText { margin-top: 5px; min-height: 38px; font-size: 13px; }
+            .key-btn { padding: 10px 0; font-size: 20px; }
+            .input-container { margin-top: 10px; }
         }
 
         .key-btn {
@@ -197,16 +239,24 @@
 <body>
 
 <div class="game-area">
-    <div class="square-container">
-        <div id="inputBand"></div>
-        <div id="targetSquare">
-            <span id="scoreText"></span>
+    <div id="scoreText"></div>
+    
+    <div class="square-container" id="squaresWrapper">
+        <div id="targetSquare" class="unanswered">
             <span id="answerText"></span>
         </div>
+        <div id="userSquare">
+            <span id="userAnswerText"></span>
+        </div>
+    </div>
+
+    <div id="realtimeRow">
+        <span id="realtimeCode"></span>
+        <span id="realtimeMatch"></span>
     </div>
     
     <div class="input-container">
-        <div class="input-wrapper">
+        <div class="input-wrapper" id="inputWrapper">
             <input type="text" id="colorInput" maxlength="6" placeholder="000000" autocomplete="off" autofocus inputmode="none">
             <div id="colorPreview"></div>
         </div>
@@ -245,11 +295,17 @@
     let delTimer = null;
 
     const targetSquare = document.getElementById('targetSquare');
-    const inputBand = document.getElementById('inputBand');
     const answerText = document.getElementById('answerText');
+    const userSquare = document.getElementById('userSquare');
+    const userAnswerText = document.getElementById('userAnswerText');
     const scoreText = document.getElementById('scoreText');
+    
+    const realtimeRow = document.getElementById('realtimeRow');
+    const realtimeCode = document.getElementById('realtimeCode');
+    const realtimeMatch = document.getElementById('realtimeMatch');
+    
+    const inputWrapper = document.getElementById('inputWrapper');
     const inputField = document.getElementById('colorInput');
-    const customKeyboard = document.getElementById('customKeyboard');
     const colorPreview = document.getElementById('colorPreview');
     const adviceText = document.getElementById('adviceText');
 
@@ -391,28 +447,24 @@
         return advices[Math.floor(Math.random() * advices.length)];
     }
 
-    /* 修正: 回答後もリアルタイムで円の色とパーセンテージが更新されるようにしました */
     function updatePreview() {
         const val = inputField.value;
         if (val.length === 6) {
             colorPreview.style.backgroundColor = '#' + val;
             colorPreview.style.opacity = '1';
             
-            // 回答後（isAnsweredがtrue）の場合、パーセンテージなどもリアルタイム更新
+            // 回答後（isAnsweredがtrue）の場合、間のプレビュー行をリアルタイム更新
             if (isAnswered) {
                 const match = calculateMatch(targetColor, val);
-                scoreText.textContent = match + '%';
-                scoreText.style.opacity = 1;
-                inputBand.style.backgroundColor = '#' + val;
-                inputBand.style.display = 'block';
+                realtimeCode.textContent = '#' + val;
+                realtimeMatch.textContent = match + '%';
             }
         } else {
             colorPreview.style.opacity = '0';
             
-            // 6文字未満の時はパーセンテージ等を一時的に隠す
             if (isAnswered) {
-                scoreText.style.opacity = 0;
-                inputBand.style.display = 'none';
+                realtimeCode.textContent = '';
+                realtimeMatch.textContent = '';
             }
         }
     }
@@ -423,21 +475,21 @@
         answerText.textContent = '#' + targetColor;
         answerText.style.color = getContrastColor(targetColor);
         answerText.style.opacity = 0;
-        scoreText.style.color = getContrastColor(targetColor);
-        scoreText.style.opacity = 0;
-        inputBand.style.display = 'none';
         
+        targetSquare.classList.add('unanswered');
+        userSquare.style.display = 'none';
+        scoreText.style.opacity = 0;
+
+        // 円を入力欄の横に戻す
+        inputWrapper.appendChild(colorPreview);
+        realtimeRow.style.display = 'none';
+
         inputField.value = '';
         inputField.disabled = false;
         inputField.focus();
 
         updatePreview();
         adviceText.style.opacity = 0;
-
-        document.querySelectorAll('.key-btn').forEach(btn => {
-            btn.style.opacity = '1';
-            btn.style.pointerEvents = 'auto';
-        });
 
         isAnswered = false;
     }
@@ -447,27 +499,39 @@
             let userInput = inputField.value;
             if (userInput.length !== 6) return; 
 
-            inputBand.style.backgroundColor = '#' + userInput;
-            inputBand.style.display = 'block';
-
+            // マッチ率の計算と表示（上部固定）
             const match = calculateMatch(targetColor, userInput);
             scoreText.textContent = match + '%';
             scoreText.style.opacity = 1;
+
+            // 正方形のレイアウト変更（問題・ユーザー回答の表示）
+            targetSquare.classList.remove('unanswered');
             answerText.style.opacity = 1;
+
+            userSquare.style.display = 'flex';
+            userSquare.style.backgroundColor = '#' + userInput;
+            userAnswerText.textContent = '#' + userInput;
+            userAnswerText.style.color = getContrastColor(userInput);
+            userAnswerText.style.opacity = 1;
+
+            // 円を中間行に移動
+            realtimeRow.style.display = 'flex';
+            realtimeRow.insertBefore(colorPreview, realtimeRow.firstChild);
+            
+            // リアルタイム行の初期値設定
+            realtimeCode.textContent = '#' + userInput;
+            realtimeMatch.textContent = match + '%';
 
             adviceText.textContent = getAdvice(targetColor, userInput);
             adviceText.style.opacity = 1;
-
-            /* 修正: キーボードや入力欄の無効化処理を削除し、再入力可能にしました */
             
             isAnswered = true;
         } else {
-            /* 修正: isAnswered が true の状態でエンターを押すと次の問題へ */
+            // isAnswered が true の状態でエンターを押すと次の問題へ
             initGame();
         }
     }
 
-    // 物理キーボード等による入力時もカーソル位置を保持するように修正
     inputField.addEventListener('input', function() {
         let val = this.value;
         const start = this.selectionStart;
@@ -480,7 +544,7 @@
         if (val.length > 6) val = val.substring(0, 6);
         
         this.value = val;
-        this.setSelectionRange(start, start); // カーソル位置を復元
+        this.setSelectionRange(start, start); 
         updatePreview(); 
     });
 
@@ -491,7 +555,6 @@
     });
 
     document.querySelectorAll('.key-btn').forEach(btn => {
-        // マウスダウン時にinputからのフォーカス外れを防ぐ
         btn.addEventListener('mousedown', function(e) {
             e.preventDefault(); 
         });
@@ -506,7 +569,6 @@
                 }, 600);
             });
 
-            // 削除時もカーソル位置を考慮
             const handleDel = () => {
                 if (delTimer) {
                     clearTimeout(delTimer);
@@ -547,7 +609,6 @@
                 handleDel();
             });
         } else {
-            // 文字入力時もカーソル位置に挿入
             btn.addEventListener('click', function(e) {
                 e.preventDefault(); 
                 const keyText = this.textContent;
