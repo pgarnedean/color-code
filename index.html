@@ -29,22 +29,31 @@
             box-sizing: border-box;
         }
 
+        /* スコア表示の滑らかな出現 */
         #scoreText {
             font-size: clamp(32px, 8vh, 60px);
             font-weight: bold;
-            display: none; /* 未回答時は非表示にして中央寄せを維持 */
             color: #333;
             margin-bottom: 2vh;
-            transition: opacity 0.3s;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            pointer-events: none;
+            height: 1.2em; /* 高さを確保してガタつきを防止 */
+        }
+        #scoreText.show {
+            opacity: 1;
+            transform: translateY(0);
         }
 
         .square-container {
             display: flex;
-            gap: 3vw;
+            gap: 0; /* JSで動的に制御 */
             justify-content: center;
             align-items: center;
             width: 100%;
             margin-bottom: 3vh;
+            transition: gap 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         #targetSquare, #userSquare {
@@ -52,7 +61,7 @@
             height: 35vh;
             max-width: 40vw; 
             max-height: 400px;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
             z-index: 2;
             display: flex;
             flex-direction: column;
@@ -60,10 +69,11 @@
             justify-content: center;
             position: relative;
             box-sizing: border-box;
-            border-radius: 8px;
-            transition: all 0.3s ease;
+            border-radius: 12px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease;
         }
 
+        /* 未回答時の中央正方形 */
         #targetSquare.unanswered {
             width: 45vh;
             height: 45vh;
@@ -72,7 +82,17 @@
         }
 
         #userSquare {
-            display: none;
+            opacity: 0;
+            transform: scale(0.9);
+            pointer-events: none;
+            width: 0; /* 最初は幅ゼロ */
+            margin-left: 0;
+        }
+        #userSquare.show {
+            opacity: 1;
+            transform: scale(1);
+            width: 35vh;
+            margin-left: 3vw;
         }
 
         #answerText, #userAnswerText {
@@ -83,17 +103,22 @@
             opacity: 0;
             position: absolute;
             bottom: 10%;
-            transition: opacity 0.3s;
+            transition: opacity 0.5s ease 0.2s; /* 少し遅れて表示 */
         }
 
+        /* リアルタイム表示の滑らかさ */
         #realtimeRow {
-            display: none;
+            opacity: 0;
+            display: flex;
             align-items: center;
             justify-content: center;
             width: 100%;
             height: 8vh;
             margin-top: 1vh;
+            transition: opacity 0.4s ease;
+            pointer-events: none;
         }
+        #realtimeRow.show { opacity: 1; }
 
         #realtimeCode {
             font-family: monospace;
@@ -101,12 +126,15 @@
             font-weight: bold;
             color: #333;
             margin-right: 20px;
+            transition: color 0.3s ease;
         }
 
         #realtimeMatch {
             font-size: clamp(24px, 5vh, 40px);
             font-weight: bold;
             color: #333;
+            min-width: 3em;
+            transition: color 0.3s ease;
         }
 
         .input-container {
@@ -121,7 +149,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 15px; 
         }
 
         #colorInput {
@@ -132,9 +159,24 @@
             text-align: center;
             font-family: monospace;
             border: 2px solid #ccc;
-            border-radius: 4px;
+            border-radius: 8px;
             outline: none;
             background-color: #fff;
+            transition: border-color 0.3s;
+        }
+        #colorInput:focus { border-color: #888; }
+
+        /* 円のプレビューを滑らかに横から出すためのコンテナ */
+        .preview-container {
+            width: 0;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), margin-left 0.3s;
+        }
+        .preview-container.active {
+            width: clamp(65px, 10vh, 100px);
+            margin-left: 15px;
         }
 
         #colorPreview {
@@ -143,8 +185,8 @@
             border-radius: 50%;
             border: 2px solid #ccc;
             box-sizing: border-box;
-            display: none; /* 6桁未満は非表示にして入力を中央に */
-            transition: background-color 0.2s;
+            background-color: transparent;
+            transition: background-color 0.3s ease;
         }
 
         #adviceText {
@@ -154,10 +196,13 @@
             text-align: center;
             width: 90%;
             max-width: 600px;
-            display: none; /* 未回答時は非表示 */
             font-weight: bold;
             line-height: 1.4;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.4s ease, transform 0.4s ease;
         }
+        #adviceText.show { opacity: 1; transform: translateY(0); }
 
         #customKeyboard {
             display: none;
@@ -169,18 +214,17 @@
         }
 
         @media (max-width: 768px) {
-            #customKeyboard {
-                display: grid;
-            }
+            #customKeyboard { display: grid; }
         }
 
         @media (max-height: 750px), (max-width: 400px) {
             #targetSquare.unanswered { width: 160px; height: 160px; }
-            #targetSquare, #userSquare { width: 130px; height: 130px; }
+            #targetSquare, #userSquare.show { width: 130px; height: 130px; }
             #answerText, #userAnswerText { font-size: 20px; bottom: 15px; }
-            .square-container { gap: 10px; margin-bottom: 5px; }
+            .square-container { margin-bottom: 5px; }
             #colorInput { width: 220px; height: 50px; font-size: 26px; }
             #colorPreview { width: 50px; height: 50px; }
+            .preview-container.active { width: 60px; margin-left: 10px; }
             #realtimeRow { height: 50px; margin-top: 5px; }
             #adviceText { margin-top: 5px; font-size: 13px; }
             .key-btn { padding: 10px 0; font-size: 20px; }
@@ -188,6 +232,7 @@
             body { overflow-y: auto; }
         }
 
+        /* ボタンのスタイル維持 */
         .key-btn {
             background: #fff;
             border: 2px solid #ddd;
@@ -202,30 +247,9 @@
             transition: all 0.1s;
             -webkit-tap-highlight-color: transparent; 
         }
-
-        .key-btn:active {
-            transform: translateY(3px);
-            box-shadow: 0 0 0 #ddd;
-        }
-
-        .key-del {
-            grid-column: span 2;
-            background: #ffebee;
-            border-color: #ffcdd2;
-            color: #d32f2f;
-            box-shadow: 0 3px 0 #ffcdd2;
-        }
-        .key-del:active { box-shadow: 0 0 0 #ffcdd2; }
-
-        .key-enter {
-            grid-column: span 2;
-            background: #e8f5e9;
-            border-color: #c8e6c9;
-            color: #2e7d32;
-            box-shadow: 0 3px 0 #c8e6c9;
-        }
-        .key-enter:active { box-shadow: 0 0 0 #c8e6c9; }
-
+        .key-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #ddd; }
+        .key-del { background: #ffebee; border-color: #ffcdd2; color: #d32f2f; box-shadow: 0 3px 0 #ffcdd2; grid-column: span 2; }
+        .key-enter { background: #e8f5e9; border-color: #c8e6c9; color: #2e7d32; box-shadow: 0 3px 0 #c8e6c9; grid-column: span 2; }
     </style>
 </head>
 <body>
@@ -250,7 +274,9 @@
     <div class="input-container">
         <div class="input-wrapper" id="inputWrapper">
             <input type="text" id="colorInput" maxlength="6" placeholder="000000" autocomplete="off" autofocus inputmode="none">
-            <div id="colorPreview"></div>
+            <div class="preview-container" id="previewContainer">
+                <div id="colorPreview"></div>
+            </div>
         </div>
         <div id="adviceText"></div>
     </div>
@@ -260,22 +286,18 @@
         <button class="key-btn">1</button>
         <button class="key-btn">2</button>
         <button class="key-btn">3</button>
-        
         <button class="key-btn">4</button>
         <button class="key-btn">5</button>
         <button class="key-btn">6</button>
         <button class="key-btn">7</button>
-        
         <button class="key-btn">8</button>
         <button class="key-btn">9</button>
         <button class="key-btn">A</button>
         <button class="key-btn">B</button>
-        
         <button class="key-btn">C</button>
         <button class="key-btn">D</button>
         <button class="key-btn">E</button>
         <button class="key-btn">F</button>
-        
         <button class="key-btn key-del">DEL</button>
         <button class="key-btn key-enter">Enter</button>
     </div>
@@ -296,100 +318,90 @@
     const realtimeCode = document.getElementById('realtimeCode');
     const realtimeMatch = document.getElementById('realtimeMatch');
     
-    const inputWrapper = document.getElementById('inputWrapper');
     const inputField = document.getElementById('colorInput');
+    const previewContainer = document.getElementById('previewContainer');
     const colorPreview = document.getElementById('colorPreview');
     const adviceText = document.getElementById('adviceText');
 
     function generateRandomColor() {
         const letters = '0123456789ABCDEF';
         let color = '';
-        for (let i = 0; i < 6; i++) {
-            color += letters[Math.floor(Math.random() * 16)];
-        }
+        for (let i = 0; i < 6; i++) color += letters[Math.floor(Math.random() * 16)];
         return color;
     }
 
     function getContrastColor(hex) {
-        const r = parseInt(hex.substring(0, 2), 16);
-        const g = parseInt(hex.substring(2, 4), 16);
-        const b = parseInt(hex.substring(4, 6), 16);
-        const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
-        return (yiq >= 128) ? '#000000' : '#FFFFFF';
+        const r = parseInt(hex.substring(0, 2), 16), g = parseInt(hex.substring(2, 4), 16), b = parseInt(hex.substring(4, 6), 16);
+        return (((r * 299) + (g * 587) + (b * 114)) / 1000 >= 128) ? '#000000' : '#FFFFFF';
     }
 
     function calculateMatch(hex1, hex2) {
         const r1 = parseInt(hex1.substring(0, 2), 16), g1 = parseInt(hex1.substring(2, 4), 16), b1 = parseInt(hex1.substring(4, 6), 16);
         const r2 = parseInt(hex2.substring(0, 2), 16), g2 = parseInt(hex2.substring(2, 4), 16), b2 = parseInt(hex2.substring(4, 6), 16);
-        const diffR = r1 - r2, diffG = g1 - g2, diffB = b1 - b2;
-        const distance = Math.sqrt(diffR * diffR + diffG * diffG + diffB * diffB);
-        const maxDistance = Math.sqrt(255 * 255 + 255 * 255 + 255 * 255);
-        let matchPercent = (1 - (distance / maxDistance)) * 100;
-        return (matchPercent < 0 ? 0 : matchPercent).toFixed(1);
+        const distance = Math.sqrt((r1-r2)**2 + (g1-g2)**2 + (b1-b2)**2);
+        const maxDistance = Math.sqrt(255*255 * 3);
+        return (Math.max(0, (1 - (distance / maxDistance)) * 100)).toFixed(1);
     }
 
     function getAdvice(targetHex, userHex) {
         const tr = parseInt(targetHex.substring(0, 2), 16), tg = parseInt(targetHex.substring(2, 4), 16), tb = parseInt(targetHex.substring(4, 6), 16);
         const ur = parseInt(userHex.substring(0, 2), 16), ug = parseInt(userHex.substring(2, 4), 16), ub = parseInt(userHex.substring(4, 6), 16);
-        const diffR = tr - ur, diffG = tg - ug, diffB = tb - ub;
-        const absR = Math.abs(diffR), absG = Math.abs(diffG), absB = Math.abs(diffB);
-        const maxDiff = Math.max(absR, absG, absB);
+        const diffs = [tr - ur, tg - ug, tb - ub];
+        const absDiffs = diffs.map(Math.abs);
+        const maxDiffIdx = absDiffs.indexOf(Math.max(...absDiffs));
 
-        if (maxDiff === 0) return "完璧です！100%一致！カラーコードの達人ですね！";
-        if (Math.abs((tr + tg + tb) - (ur + ug + ub)) > 200 && maxDiff < 100) {
-            return (tr + tg + tb) > (ur + ug + ub) ? "全体的にもっと明るい色でした。RGBすべての数字を大きく（F寄りに）してみましょう！" : "全体的にもっと暗い色でした。RGBすべての数字を小さく（0寄りに）してみましょう！";
-        }
-        if (Math.abs(tr - tg) < 20 && Math.abs(tg - tb) < 20 && maxDiff > 30) {
-            return "正解は無彩色（グレー・白・黒）に近い色でした！3つの値をもっと均等にしてみましょう！";
-        }
-        if (maxDiff === absR) return diffR > 0 ? "もう少し赤みが必要でしたね。左の2文字を大きく（9やA〜Fへ）してみましょう。" : "赤みが強すぎたようです。左の2文字をもっと0に近づけてみましょう。";
-        if (maxDiff === absG) return diffG > 0 ? "もう少し緑色が必要でした。真ん中の2文字を大きく（9やA〜Fへ）してみましょう。" : "緑が強すぎたようです。真ん中の2文字をもっと0に近づけてみましょう。";
-        return diffB > 0 ? "もう少し青みが必要でした。右の2文字を大きく（9やA〜Fへ）してみましょう。" : "青が強すぎたようです。右の2文字をもっと0に近づけてみましょう。";
+        if (Math.max(...absDiffs) === 0) return "完璧です！100%一致！";
+        if (Math.abs((tr+tg+tb)-(ur+ug+ub)) > 200) return (tr+tg+tb) > (ur+ug+ub) ? "全体的にもっと明るい色でした。" : "全体的にもっと暗い色でした。";
+        
+        const labels = ["赤み", "緑色", "青み"];
+        const parts = ["左の2文字", "真ん中の2文字", "右の2文字"];
+        return diffs[maxDiffIdx] > 0 ? `もう少し${labels[maxDiffIdx]}が必要でした。${parts[maxDiffIdx]}を大きくしてみましょう。` : `${labels[maxDiffIdx]}が強すぎたようです。${parts[maxDiffIdx]}を小さくしてみましょう。`;
     }
 
     function updatePreview() {
         const val = inputField.value;
         if (val.length === 6) {
             colorPreview.style.backgroundColor = '#' + val;
-            colorPreview.style.display = 'block'; // 6桁の時だけ表示
+            previewContainer.classList.add('active');
             if (isAnswered) {
                 const match = calculateMatch(targetColor, val);
                 realtimeCode.textContent = '#' + val;
                 realtimeMatch.textContent = match + '%';
+                userSquare.style.backgroundColor = '#' + val;
+                userAnswerText.textContent = '#' + val;
+                userAnswerText.style.color = getContrastColor(val);
+                adviceText.textContent = getAdvice(targetColor, val);
             }
         } else {
-            colorPreview.style.display = 'none'; // 6桁未満は非表示にして中央維持
+            previewContainer.classList.remove('active');
             if (isAnswered) {
-                realtimeCode.textContent = '';
-                realtimeMatch.textContent = '';
+                realtimeCode.textContent = '# ??????';
+                realtimeMatch.textContent = '---%';
             }
         }
     }
 
     function initGame() {
-        targetColor = generateRandomColor();
-        targetSquare.style.backgroundColor = '#' + targetColor;
-        answerText.textContent = '#' + targetColor;
-        answerText.style.color = getContrastColor(targetColor);
-        answerText.style.opacity = 0;
-        
-        targetSquare.classList.add('unanswered');
-        userSquare.style.display = 'none';
-        
-        // レイアウトを中央に戻すため非表示にする
-        scoreText.style.display = 'none';
-        scoreText.style.opacity = 0;
-        adviceText.style.display = 'none';
-        adviceText.style.opacity = 0;
-        realtimeRow.style.display = 'none';
-
-        inputWrapper.appendChild(colorPreview);
-        inputField.value = '';
-        inputField.disabled = false;
-        inputField.focus();
-
-        updatePreview();
         isAnswered = false;
+        targetColor = generateRandomColor();
+        
+        // リセット処理
+        scoreText.classList.remove('show');
+        adviceText.classList.remove('show');
+        realtimeRow.classList.remove('show');
+        userSquare.classList.remove('show');
+        targetSquare.classList.add('unanswered');
+        answerText.style.opacity = 0;
+
+        setTimeout(() => {
+            targetSquare.style.backgroundColor = '#' + targetColor;
+            answerText.textContent = '#' + targetColor;
+            answerText.style.color = getContrastColor(targetColor);
+            inputField.value = '';
+            inputField.disabled = false;
+            updatePreview();
+            inputField.focus();
+        }, 200);
     }
 
     function handleEnter() {
@@ -397,78 +409,65 @@
             let userInput = inputField.value;
             if (userInput.length !== 6) return; 
 
+            isAnswered = true;
             const match = calculateMatch(targetColor, userInput);
+            
+            // スコアとアドバイスの表示
             scoreText.textContent = match + '%';
-            scoreText.style.display = 'block'; // 結果表示
-            setTimeout(() => scoreText.style.opacity = 1, 10);
+            scoreText.classList.add('show');
+            adviceText.textContent = getAdvice(targetColor, userInput);
+            adviceText.classList.add('show');
 
+            // 正解の表示
             targetSquare.classList.remove('unanswered');
             answerText.style.opacity = 1;
 
-            userSquare.style.display = 'flex';
+            // ユーザー回答の表示
             userSquare.style.backgroundColor = '#' + userInput;
             userAnswerText.textContent = '#' + userInput;
             userAnswerText.style.color = getContrastColor(userInput);
-            userAnswerText.style.opacity = 1;
+            userSquare.classList.add('show');
 
-            realtimeRow.style.display = 'flex';
-            realtimeRow.insertBefore(colorPreview, realtimeRow.firstChild);
-            colorPreview.style.display = 'block';
-            
+            // リアルタイム行の表示
             realtimeCode.textContent = '#' + userInput;
             realtimeMatch.textContent = match + '%';
-
-            adviceText.textContent = getAdvice(targetColor, userInput);
-            adviceText.style.display = 'block'; // アドバイス表示
-            setTimeout(() => adviceText.style.opacity = 1, 10);
-            
-            isAnswered = true;
+            realtimeRow.classList.add('show');
         } else {
             initGame();
         }
     }
 
     inputField.addEventListener('input', function() {
-        let val = this.value;
-        const start = this.selectionStart;
-        val = val.replace(/[Ａ-Ｚａ-ｚ０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0)).toUpperCase().replace(/[^0-9A-F]/g, '');
+        let val = this.value.toUpperCase().replace(/[^0-9A-F]/g, '');
         this.value = val.substring(0, 6);
-        this.setSelectionRange(start, start); 
         updatePreview(); 
     });
 
     document.addEventListener('keydown', e => { if (e.key === 'Enter') handleEnter(); });
 
     document.querySelectorAll('.key-btn').forEach(btn => {
-        btn.addEventListener('mousedown', e => e.preventDefault());
-        if (btn.classList.contains('key-del')) {
-            const clearInput = () => { inputField.value = ''; updatePreview(); };
-            const deleteChar = () => {
+        btn.addEventListener('pointerdown', e => {
+            e.preventDefault();
+            const keyText = btn.textContent;
+            if (keyText === 'Enter') {
+                handleEnter();
+            } else if (keyText === 'DEL') {
                 const start = inputField.selectionStart, val = inputField.value;
                 if (start > 0) {
                     inputField.value = val.slice(0, start - 1) + val.slice(start);
                     inputField.setSelectionRange(start - 1, start - 1);
                 }
                 updatePreview();
-            };
-            btn.addEventListener('touchstart', e => { e.preventDefault(); delTimer = setTimeout(clearInput, 600); });
-            btn.addEventListener('touchend', e => { e.preventDefault(); if(delTimer){ clearTimeout(delTimer); deleteChar(); delTimer=null; } });
-            btn.addEventListener('mousedown', e => { delTimer = setTimeout(clearInput, 600); });
-            btn.addEventListener('mouseup', e => { if(delTimer){ clearTimeout(delTimer); deleteChar(); delTimer=null; } });
-        } else {
-            btn.addEventListener('click', function(e) {
-                e.preventDefault(); 
-                const keyText = this.textContent;
-                if (keyText === 'Enter') {
-                    handleEnter();
-                } else if (inputField.value.length < 6) {
-                    const start = inputField.selectionStart, val = inputField.value;
-                    inputField.value = val.slice(0, start) + keyText + val.slice(start);
-                    inputField.setSelectionRange(start + 1, start + 1);
-                    updatePreview(); 
-                }
-            });
-        }
+                delTimer = setTimeout(() => { inputField.value = ''; updatePreview(); }, 600);
+            } else if (inputField.value.length < 6) {
+                const start = inputField.selectionStart, val = inputField.value;
+                inputField.value = val.slice(0, start) + keyText + val.slice(start);
+                inputField.setSelectionRange(start + 1, start + 1);
+                updatePreview();
+            }
+        });
+        btn.addEventListener('pointerup', () => clearTimeout(delTimer));
+        btn.addEventListener('pointerleave', () => clearTimeout(delTimer));
     });
 
     initGame();
