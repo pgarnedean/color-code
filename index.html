@@ -81,6 +81,14 @@
             z-index: 2;
         }
 
+        /* 入力欄とプレビュー円を横並びにするためのコンテナ */
+        .input-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px; /* 入力欄と円の隙間 */
+        }
+
         #colorInput {
             width: 240px;
             height: 50px;
@@ -101,6 +109,17 @@
         #colorInput:disabled {
             background-color: #eee;
             color: #333;
+        }
+
+        /* リアルタイムプレビュー用の円 */
+        #colorPreview {
+            width: 50px; /* 入力欄の高さと同じ直径 */
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid #ccc;
+            box-sizing: border-box;
+            opacity: 0; /* 初期状態や6桁未満の時は透明にする */
+            transition: opacity 0.2s, background-color 0.2s;
         }
 
         #customKeyboard {
@@ -170,7 +189,10 @@
     </div>
     
     <div class="input-container">
-        <input type="text" id="colorInput" maxlength="6" placeholder="000000" autocomplete="off" autofocus inputmode="none">
+        <div class="input-wrapper">
+            <input type="text" id="colorInput" maxlength="6" placeholder="000000" autocomplete="off" autofocus inputmode="none">
+            <div id="colorPreview"></div>
+        </div>
     </div>
 
     <div id="customKeyboard">
@@ -210,6 +232,7 @@
     const scoreText = document.getElementById('scoreText');
     const inputField = document.getElementById('colorInput');
     const customKeyboard = document.getElementById('customKeyboard');
+    const colorPreview = document.getElementById('colorPreview'); // プレビュー要素を取得
 
     function generateRandomColor() {
         const letters = '0123456789ABCDEF';
@@ -228,27 +251,34 @@
         return (yiq >= 128) ? '#000000' : '#FFFFFF';
     }
 
-    // 一致率の計算ロジックを修正
     function calculateMatch(hex1, hex2) {
         const r1 = parseInt(hex1.substring(0, 2), 16), g1 = parseInt(hex1.substring(2, 4), 16), b1 = parseInt(hex1.substring(4, 6), 16);
         const r2 = parseInt(hex2.substring(0, 2), 16), g2 = parseInt(hex2.substring(2, 4), 16), b2 = parseInt(hex2.substring(4, 6), 16);
         
-        // 各要素の差
         const diffR = r1 - r2;
         const diffG = g1 - g2;
         const diffB = b1 - b2;
         
-        // 3D空間（RGB）での直線距離（ユークリッド距離）を計算
         const distance = Math.sqrt(diffR * diffR + diffG * diffG + diffB * diffB);
-        
-        // 理論上の最大距離（黒#000000 と 白#FFFFFF の距離）
         const maxDistance = Math.sqrt(255 * 255 + 255 * 255 + 255 * 255);
         
-        // 距離を0-100%に変換
         let matchPercent = (1 - (distance / maxDistance)) * 100;
         
         if (matchPercent < 0) matchPercent = 0;
         return matchPercent.toFixed(1);
+    }
+
+    // プレビュー円の更新処理
+    function updatePreview() {
+        const val = inputField.value;
+        // 6桁入力されている時のみ円を表示・色を反映
+        if (val.length === 6) {
+            colorPreview.style.backgroundColor = '#' + val;
+            colorPreview.style.opacity = '1';
+        } else {
+            // それ以外の時は透明にして隠す
+            colorPreview.style.opacity = '0';
+        }
     }
 
     function initGame() {
@@ -264,6 +294,8 @@
         inputField.value = '';
         inputField.disabled = false;
         inputField.focus();
+
+        updatePreview(); // リセット時にプレビューも消す
 
         document.querySelectorAll('.key-btn').forEach(btn => {
             btn.style.opacity = '1';
@@ -310,6 +342,7 @@
         val = val.replace(/[^0-9A-F]/g, '');
         if (val.length > 6) val = val.substring(0, 6);
         this.value = val;
+        updatePreview(); // PC入力時にプレビュー更新
     });
 
     document.addEventListener('keydown', function(e) {
@@ -324,6 +357,7 @@
                 e.preventDefault();
                 delTimer = setTimeout(() => {
                     inputField.value = '';
+                    updatePreview(); // 長押し削除時にプレビュー更新
                     delTimer = null;
                 }, 600);
             });
@@ -333,13 +367,15 @@
                 if (delTimer) {
                     clearTimeout(delTimer);
                     inputField.value = inputField.value.slice(0, -1);
+                    updatePreview(); // 通常削除時にプレビュー更新
                     delTimer = null;
                 }
             });
-            // マウス操作用
+            
             btn.addEventListener('mousedown', function(e) {
                 delTimer = setTimeout(() => {
                     inputField.value = '';
+                    updatePreview(); // PCでの長押し削除時にプレビュー更新
                     delTimer = null;
                 }, 600);
             });
@@ -347,6 +383,7 @@
                 if (delTimer) {
                     clearTimeout(delTimer);
                     inputField.value = inputField.value.slice(0, -1);
+                    updatePreview(); // PCでの通常削除時にプレビュー更新
                     delTimer = null;
                 }
             });
@@ -359,6 +396,7 @@
                     handleEnter();
                 } else if (inputField.value.length < 6) {
                     inputField.value += keyText;
+                    updatePreview(); // 文字入力時にプレビュー更新
                 }
             });
         }
