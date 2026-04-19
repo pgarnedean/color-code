@@ -202,7 +202,7 @@
 <script>
     let isAnswered = false;
     let targetColor = '';
-    let delTimer = null; // 長押し判定用
+    let delTimer = null;
 
     const targetSquare = document.getElementById('targetSquare');
     const inputBand = document.getElementById('inputBand');
@@ -228,14 +228,26 @@
         return (yiq >= 128) ? '#000000' : '#FFFFFF';
     }
 
+    // 一致率の計算ロジックを修正
     function calculateMatch(hex1, hex2) {
         const r1 = parseInt(hex1.substring(0, 2), 16), g1 = parseInt(hex1.substring(2, 4), 16), b1 = parseInt(hex1.substring(4, 6), 16);
         const r2 = parseInt(hex2.substring(0, 2), 16), g2 = parseInt(hex2.substring(2, 4), 16), b2 = parseInt(hex2.substring(4, 6), 16);
-        const diffR = Math.abs(r1 - r2);
-        const diffG = Math.abs(g1 - g2);
-        const diffB = Math.abs(b1 - b2);
-        const totalDiff = (diffR + diffG + diffB) / (255 * 3);
-        const matchPercent = (1 - totalDiff) * 100;
+        
+        // 各要素の差
+        const diffR = r1 - r2;
+        const diffG = g1 - g2;
+        const diffB = b1 - b2;
+        
+        // 3D空間（RGB）での直線距離（ユークリッド距離）を計算
+        const distance = Math.sqrt(diffR * diffR + diffG * diffG + diffB * diffB);
+        
+        // 理論上の最大距離（黒#000000 と 白#FFFFFF の距離）
+        const maxDistance = Math.sqrt(255 * 255 + 255 * 255 + 255 * 255);
+        
+        // 距離を0-100%に変換
+        let matchPercent = (1 - (distance / maxDistance)) * 100;
+        
+        if (matchPercent < 0) matchPercent = 0;
         return matchPercent.toFixed(1);
     }
 
@@ -253,7 +265,6 @@
         inputField.disabled = false;
         inputField.focus();
 
-        // キーボード全体を元に戻す
         document.querySelectorAll('.key-btn').forEach(btn => {
             btn.style.opacity = '1';
             btn.style.pointerEvents = 'auto';
@@ -277,7 +288,6 @@
 
             inputField.disabled = true;
             
-            // Enterボタン以外を無効化する
             document.querySelectorAll('.key-btn').forEach(btn => {
                 if (!btn.classList.contains('key-enter')) {
                     btn.style.opacity = '0.5';
@@ -308,28 +318,39 @@
         }
     });
 
-    // キーボードの各ボタン処理
     document.querySelectorAll('.key-btn').forEach(btn => {
-        // DELボタン用の長押し処理（スマホのみ対象）
         if (btn.classList.contains('key-del')) {
             btn.addEventListener('touchstart', function(e) {
                 e.preventDefault();
                 delTimer = setTimeout(() => {
-                    inputField.value = ''; // 全削除
+                    inputField.value = '';
                     delTimer = null;
-                }, 600); // 0.6秒で長押し判定
+                }, 600);
             });
 
             btn.addEventListener('touchend', function(e) {
                 e.preventDefault();
                 if (delTimer) {
                     clearTimeout(delTimer);
-                    inputField.value = inputField.value.slice(0, -1); // 1文字削除
+                    inputField.value = inputField.value.slice(0, -1);
+                    delTimer = null;
+                }
+            });
+            // マウス操作用
+            btn.addEventListener('mousedown', function(e) {
+                delTimer = setTimeout(() => {
+                    inputField.value = '';
+                    delTimer = null;
+                }, 600);
+            });
+            btn.addEventListener('mouseup', function(e) {
+                if (delTimer) {
+                    clearTimeout(delTimer);
+                    inputField.value = inputField.value.slice(0, -1);
                     delTimer = null;
                 }
             });
         } else {
-            // その他のボタン
             btn.addEventListener('click', function(e) {
                 e.preventDefault(); 
                 const keyText = this.textContent;
