@@ -29,7 +29,7 @@
             box-sizing: border-box;
         }
 
-        /* スコア表示の滑らかな出現 */
+        /* スコア表示（滑らかな出現） */
         #scoreText {
             font-size: clamp(32px, 8vh, 60px);
             font-weight: bold;
@@ -39,7 +39,7 @@
             transform: translateY(-10px);
             transition: opacity 0.4s ease, transform 0.4s ease;
             pointer-events: none;
-            height: 1.2em; /* 高さを確保してガタつきを防止 */
+            height: 1.2em;
         }
         #scoreText.show {
             opacity: 1;
@@ -48,7 +48,7 @@
 
         .square-container {
             display: flex;
-            gap: 0; /* JSで動的に制御 */
+            gap: 0;
             justify-content: center;
             align-items: center;
             width: 100%;
@@ -73,7 +73,6 @@
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease;
         }
 
-        /* 未回答時の中央正方形 */
         #targetSquare.unanswered {
             width: 45vh;
             height: 45vh;
@@ -85,7 +84,7 @@
             opacity: 0;
             transform: scale(0.9);
             pointer-events: none;
-            width: 0; /* 最初は幅ゼロ */
+            width: 0;
             margin-left: 0;
         }
         #userSquare.show {
@@ -103,10 +102,10 @@
             opacity: 0;
             position: absolute;
             bottom: 10%;
-            transition: opacity 0.5s ease 0.2s; /* 少し遅れて表示 */
+            transition: opacity 0.5s ease 0.2s;
         }
 
-        /* リアルタイム表示の滑らかさ */
+        /* リアルタイム表示（滑らか） */
         #realtimeRow {
             opacity: 0;
             display: flex;
@@ -164,9 +163,8 @@
             background-color: #fff;
             transition: border-color 0.3s;
         }
-        #colorInput:focus { border-color: #888; }
 
-        /* 円のプレビューを滑らかに横から出すためのコンテナ */
+        /* プレビュー円のコンテナ（6桁未満で幅0にする） */
         .preview-container {
             width: 0;
             overflow: hidden;
@@ -213,9 +211,7 @@
             max-width: 320px;
         }
 
-        @media (max-width: 768px) {
-            #customKeyboard { display: grid; }
-        }
+        @media (max-width: 768px) { #customKeyboard { display: grid; } }
 
         @media (max-height: 750px), (max-width: 400px) {
             #targetSquare.unanswered { width: 160px; height: 160px; }
@@ -232,7 +228,6 @@
             body { overflow-y: auto; }
         }
 
-        /* ボタンのスタイル維持 */
         .key-btn {
             background: #fff;
             border: 2px solid #ddd;
@@ -272,7 +267,7 @@
     </div>
     
     <div class="input-container">
-        <div class="input-wrapper" id="inputWrapper">
+        <div class="input-wrapper">
             <input type="text" id="colorInput" maxlength="6" placeholder="000000" autocomplete="off" autofocus inputmode="none">
             <div class="preview-container" id="previewContainer">
                 <div id="colorPreview"></div>
@@ -282,24 +277,11 @@
     </div>
 
     <div id="customKeyboard">
-        <button class="key-btn">0</button>
-        <button class="key-btn">1</button>
-        <button class="key-btn">2</button>
-        <button class="key-btn">3</button>
-        <button class="key-btn">4</button>
-        <button class="key-btn">5</button>
-        <button class="key-btn">6</button>
-        <button class="key-btn">7</button>
-        <button class="key-btn">8</button>
-        <button class="key-btn">9</button>
-        <button class="key-btn">A</button>
-        <button class="key-btn">B</button>
-        <button class="key-btn">C</button>
-        <button class="key-btn">D</button>
-        <button class="key-btn">E</button>
-        <button class="key-btn">F</button>
-        <button class="key-btn key-del">DEL</button>
-        <button class="key-btn key-enter">Enter</button>
+        <button class="key-btn">0</button><button class="key-btn">1</button><button class="key-btn">2</button><button class="key-btn">3</button>
+        <button class="key-btn">4</button><button class="key-btn">5</button><button class="key-btn">6</button><button class="key-btn">7</button>
+        <button class="key-btn">8</button><button class="key-btn">9</button><button class="key-btn">A</button><button class="key-btn">B</button>
+        <button class="key-btn">C</button><button class="key-btn">D</button><button class="key-btn">E</button><button class="key-btn">F</button>
+        <button class="key-btn key-del">DEL</button><button class="key-btn key-enter">Enter</button>
     </div>
 </div>
 
@@ -313,11 +295,9 @@
     const userSquare = document.getElementById('userSquare');
     const userAnswerText = document.getElementById('userAnswerText');
     const scoreText = document.getElementById('scoreText');
-    
     const realtimeRow = document.getElementById('realtimeRow');
     const realtimeCode = document.getElementById('realtimeCode');
     const realtimeMatch = document.getElementById('realtimeMatch');
-    
     const inputField = document.getElementById('colorInput');
     const previewContainer = document.getElementById('previewContainer');
     const colorPreview = document.getElementById('colorPreview');
@@ -338,24 +318,29 @@
     function calculateMatch(hex1, hex2) {
         const r1 = parseInt(hex1.substring(0, 2), 16), g1 = parseInt(hex1.substring(2, 4), 16), b1 = parseInt(hex1.substring(4, 6), 16);
         const r2 = parseInt(hex2.substring(0, 2), 16), g2 = parseInt(hex2.substring(2, 4), 16), b2 = parseInt(hex2.substring(4, 6), 16);
-        const distance = Math.sqrt((r1-r2)**2 + (g1-g2)**2 + (b1-b2)**2);
-        const maxDistance = Math.sqrt(255*255 * 3);
+        const diffR = r1 - r2, diffG = g1 - g2, diffB = b1 - b2;
+        const distance = Math.sqrt(diffR * diffR + diffG * diffG + diffB * diffB);
+        const maxDistance = Math.sqrt(255 * 255 + 255 * 255 + 255 * 255);
         return (Math.max(0, (1 - (distance / maxDistance)) * 100)).toFixed(1);
     }
 
     function getAdvice(targetHex, userHex) {
         const tr = parseInt(targetHex.substring(0, 2), 16), tg = parseInt(targetHex.substring(2, 4), 16), tb = parseInt(targetHex.substring(4, 6), 16);
         const ur = parseInt(userHex.substring(0, 2), 16), ug = parseInt(userHex.substring(2, 4), 16), ub = parseInt(userHex.substring(4, 6), 16);
-        const diffs = [tr - ur, tg - ug, tb - ub];
-        const absDiffs = diffs.map(Math.abs);
-        const maxDiffIdx = absDiffs.indexOf(Math.max(...absDiffs));
+        const diffR = tr - ur, diffG = tg - ug, diffB = tb - ub;
+        const absR = Math.abs(diffR), absG = Math.abs(diffG), absB = Math.abs(diffB);
+        const maxDiff = Math.max(absR, absG, absB);
 
-        if (Math.max(...absDiffs) === 0) return "完璧です！100%一致！";
-        if (Math.abs((tr+tg+tb)-(ur+ug+ub)) > 200) return (tr+tg+tb) > (ur+ug+ub) ? "全体的にもっと明るい色でした。" : "全体的にもっと暗い色でした。";
-        
-        const labels = ["赤み", "緑色", "青み"];
-        const parts = ["左の2文字", "真ん中の2文字", "右の2文字"];
-        return diffs[maxDiffIdx] > 0 ? `もう少し${labels[maxDiffIdx]}が必要でした。${parts[maxDiffIdx]}を大きくしてみましょう。` : `${labels[maxDiffIdx]}が強すぎたようです。${parts[maxDiffIdx]}を小さくしてみましょう。`;
+        if (maxDiff === 0) return "完璧です！100%一致！カラーコードの達人ですね！";
+        if (Math.abs((tr + tg + tb) - (ur + ug + ub)) > 200 && maxDiff < 100) {
+            return (tr + tg + tb) > (ur + ug + ub) ? "全体的にもっと明るい色でした。RGBすべての数字を大きく（F寄りに）してみましょう！" : "全体的にもっと暗い色でした。RGBすべての数字を小さく（0寄りに）してみましょう！";
+        }
+        if (Math.abs(tr - tg) < 20 && Math.abs(tg - tb) < 20 && maxDiff > 30) {
+            return "正解は無彩色（グレー・白・黒）に近い色でした！3つの値をもっと均等にしてみましょう！";
+        }
+        if (maxDiff === absR) return diffR > 0 ? "もう少し赤みが必要でしたね。左の2文字を大きく（9やA〜Fへ）してみましょう。" : "赤みが強すぎたようです。左の2文字をもっと0に近づけてみましょう。";
+        if (maxDiff === absG) return diffG > 0 ? "もう少し緑色が必要でした。真ん中の2文字を大きく（9やA〜Fへ）してみましょう。" : "緑が強すぎたようです。真ん中の2文字をもっと0に近づけてみましょう。";
+        return diffB > 0 ? "もう少し青みが必要でした。右の2文字を大きく（9やA〜Fへ）してみましょう。" : "青が強すぎたようです。右の2文字をもっと0に近づけてみましょう。";
     }
 
     function updatePreview() {
@@ -384,14 +369,13 @@
     function initGame() {
         isAnswered = false;
         targetColor = generateRandomColor();
-        
-        // リセット処理
         scoreText.classList.remove('show');
         adviceText.classList.remove('show');
         realtimeRow.classList.remove('show');
         userSquare.classList.remove('show');
         targetSquare.classList.add('unanswered');
         answerText.style.opacity = 0;
+        userAnswerText.style.opacity = 0;
 
         setTimeout(() => {
             targetSquare.style.backgroundColor = '#' + targetColor;
@@ -411,24 +395,20 @@
 
             isAnswered = true;
             const match = calculateMatch(targetColor, userInput);
-            
-            // スコアとアドバイスの表示
             scoreText.textContent = match + '%';
             scoreText.classList.add('show');
             adviceText.textContent = getAdvice(targetColor, userInput);
             adviceText.classList.add('show');
 
-            // 正解の表示
             targetSquare.classList.remove('unanswered');
             answerText.style.opacity = 1;
 
-            // ユーザー回答の表示
             userSquare.style.backgroundColor = '#' + userInput;
             userAnswerText.textContent = '#' + userInput;
             userAnswerText.style.color = getContrastColor(userInput);
+            userAnswerText.style.opacity = 1; // 自分の回答コードを表示
             userSquare.classList.add('show');
 
-            // リアルタイム行の表示
             realtimeCode.textContent = '#' + userInput;
             realtimeMatch.textContent = match + '%';
             realtimeRow.classList.add('show');
@@ -437,15 +417,20 @@
         }
     }
 
+    // 全角・小文字を半角大文字に変換する機能
     inputField.addEventListener('input', function() {
-        let val = this.value.toUpperCase().replace(/[^0-9A-F]/g, '');
+        let val = this.value;
+        const start = this.selectionStart;
+        val = val.replace(/[Ａ-Ｚａ-ｚ０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0)).toUpperCase().replace(/[^0-9A-F]/g, '');
         this.value = val.substring(0, 6);
+        this.setSelectionRange(start, start);
         updatePreview(); 
     });
 
     document.addEventListener('keydown', e => { if (e.key === 'Enter') handleEnter(); });
 
     document.querySelectorAll('.key-btn').forEach(btn => {
+        // pointerdown + preventDefault でフォーカスを外さない
         btn.addEventListener('pointerdown', e => {
             e.preventDefault();
             const keyText = btn.textContent;
