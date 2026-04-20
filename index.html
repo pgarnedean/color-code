@@ -23,26 +23,29 @@
             height: 100%;
             display: flex;
             flex-direction: column;
-            justify-content: flex-start; 
+            justify-content: center; 
             align-items: center;
             position: relative;
             padding: 10px;
             box-sizing: border-box;
-            padding-bottom: 240px; /* キーボード領域を確保 */
         }
 
+        /* スコア表示（中央配置） */
         #scoreText {
-            font-size: clamp(32px, 7vh, 60px);
+            font-size: clamp(32px, 8vh, 60px);
             font-weight: bold;
             color: #333;
-            margin: 2vh 0;
+            margin-bottom: 2vh;
             opacity: 0;
             transform: translateY(-10px);
             transition: opacity 0.4s ease, transform 0.4s ease;
             pointer-events: none;
             height: 1.2em;
         }
-        #scoreText.show { opacity: 1; transform: translateY(0); }
+        #scoreText.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
 
         .square-container {
             display: flex;
@@ -50,15 +53,15 @@
             justify-content: center;
             align-items: center;
             width: 100%;
-            margin-bottom: 1.5vh;
+            margin-bottom: 2vh;
             transition: gap 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         #targetSquare, #userSquare {
-            width: 28vh; 
-            height: 28vh;
-            max-width: 42vw; 
-            max-height: 300px;
+            width: 30vh; 
+            height: 30vh;
+            max-width: 40vw; 
+            max-height: 350px;
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
             z-index: 2;
             display: flex;
@@ -72,10 +75,10 @@
         }
 
         #targetSquare.unanswered {
-            width: 38vh;
-            height: 38vh;
-            max-width: 85vw;
-            max-height: 400px;
+            width: 40vh;
+            height: 40vh;
+            max-width: 80vw;
+            max-height: 450px;
         }
 
         #userSquare {
@@ -88,37 +91,41 @@
         #userSquare.show {
             opacity: 1;
             transform: scale(1);
-            width: 28vh;
+            width: 30vh;
             margin-left: 3vw;
         }
 
         #answerText, #userAnswerText {
-            font-size: clamp(16px, 2.5vh, 24px);
+            font-size: clamp(16px, 3vh, 28px);
             font-family: monospace;
             font-weight: bold;
+            letter-spacing: 1px;
             opacity: 0;
             position: absolute;
             bottom: 10%;
             transition: opacity 0.5s ease 0.2s;
         }
 
+        /* リアルタイム表示（%のみ中央に表示） */
         #realtimeRow {
             opacity: 0;
             display: flex;
             align-items: center;
             justify-content: center;
             width: 100%;
-            height: 5vh;
+            height: 6vh;
+            margin-top: 1vh;
             transition: opacity 0.4s ease;
             pointer-events: none;
         }
         #realtimeRow.show { opacity: 1; }
 
         #realtimeMatch {
-            font-size: clamp(24px, 4.5vh, 40px);
+            font-size: clamp(24px, 5vh, 40px);
             font-weight: bold;
             color: #333;
             text-align: center;
+            transition: color 0.3s ease;
         }
 
         .input-container {
@@ -137,9 +144,9 @@
         }
 
         #colorInput {
-            width: clamp(160px, 45vw, 320px);
-            height: 60px;
-            font-size: 32px;
+            width: clamp(180px, 40vw, 350px);
+            height: clamp(45px, 7vh, 70px);
+            font-size: clamp(22px, 4vh, 38px);
             letter-spacing: 2px;
             text-align: center;
             font-family: monospace;
@@ -147,6 +154,7 @@
             border-radius: 8px;
             outline: none;
             background-color: #fff;
+            transition: border-color 0.3s;
         }
 
         .preview-container {
@@ -157,13 +165,13 @@
             transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), margin-left 0.3s;
         }
         .preview-container.active {
-            width: 75px;
+            width: clamp(60px, 9vh, 90px);
             margin-left: 15px;
         }
 
         #colorPreview {
-            width: 60px; 
-            height: 60px;
+            width: clamp(45px, 7vh, 70px); 
+            height: clamp(45px, 7vh, 70px);
             border-radius: 50%;
             border: 2px solid #ccc;
             box-sizing: border-box;
@@ -173,61 +181,51 @@
 
         #adviceText {
             margin-top: 1.5vh;
-            font-size: 14px;
+            font-size: clamp(12px, 2vh, 18px);
             color: #444;
             text-align: center;
             width: 95%;
-            max-width: 500px;
+            max-width: 600px;
             font-weight: bold;
-            line-height: 1.6;
+            line-height: 1.5;
             opacity: 0;
             transform: translateY(10px);
             transition: opacity 0.4s ease, transform 0.4s ease;
-            min-height: 4.5em;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            min-height: 3em;
         }
         #adviceText.show { opacity: 1; transform: translateY(0); }
 
-        /* スマホ版キーボード固定 */
+        /* キーボードのサイズを固定 */
         #customKeyboard {
-            display: grid;
+            display: none;
             grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
+            gap: 6px;
+            margin-top: 10px;
             width: 100%;
-            max-width: 400px;
-            padding: 15px;
-            background: #eee;
-            box-sizing: border-box;
-            position: fixed;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            border-top: 1px solid #ddd;
-            z-index: 100;
+            max-width: 320px;
+            min-height: 180px; /* 高さを固定 */
         }
 
-        @media (min-width: 769px) {
-            #customKeyboard { position: static; transform: none; background: transparent; border: none; margin-top: 20px; }
-            .game-area { padding-bottom: 20px; justify-content: center; }
+        @media (max-width: 768px) { 
+            #customKeyboard { display: grid; } 
+            .game-area { justify-content: flex-start; padding-top: 20px; }
         }
 
         .key-btn {
             background: #fff;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            font-size: 22px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 20px;
             font-family: monospace;
-            padding: 12px 0;
+            padding: 10px 0;
             cursor: pointer;
             font-weight: bold;
             color: #333;
-            box-shadow: 0 3px 0 #bbb;
-            transition: active 0.05s;
+            box-shadow: 0 3px 0 #ddd;
+            transition: transform 0.05s, box-shadow 0.05s;
             -webkit-tap-highlight-color: transparent; 
         }
-        .key-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #bbb; }
+        .key-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #ddd; }
         .key-del { background: #ffebee; border-color: #ffcdd2; color: #d32f2f; box-shadow: 0 3px 0 #ffcdd2; grid-column: span 2; }
         .key-enter { background: #e8f5e9; border-color: #c8e6c9; color: #2e7d32; box-shadow: 0 3px 0 #c8e6c9; grid-column: span 2; }
     </style>
@@ -272,6 +270,7 @@
 <script>
     let isAnswered = false;
     let targetColor = '';
+    let submittedColor = '';
     let delTimer = null;
 
     const targetSquare = document.getElementById('targetSquare');
@@ -301,65 +300,67 @@
     function calculateMatch(hex1, hex2) {
         const r1 = parseInt(hex1.substring(0, 2), 16), g1 = parseInt(hex1.substring(2, 4), 16), b1 = parseInt(hex1.substring(4, 6), 16);
         const r2 = parseInt(hex2.substring(0, 2), 16), g2 = parseInt(hex2.substring(2, 4), 16), b2 = parseInt(hex2.substring(4, 6), 16);
-        const distance = Math.sqrt(Math.pow(r1-r2, 2) + Math.pow(g1-g2, 2) + Math.pow(b1-b2, 2));
-        const maxDistance = Math.sqrt(3 * Math.pow(255, 2));
+        const diffR = r1 - r2, diffG = g1 - g2, diffB = b1 - b2;
+        const distance = Math.sqrt(diffR * diffR + diffG * diffG + diffB * diffB);
+        const maxDistance = Math.sqrt(255 * 255 + 255 * 255 + 255 * 255);
         return (Math.max(0, (1 - (distance / maxDistance)) * 100)).toFixed(1);
     }
 
     function getDetailedAdvice(targetHex, userHex) {
         const tr = parseInt(targetHex.substring(0, 2), 16), tg = parseInt(targetHex.substring(2, 4), 16), tb = parseInt(targetHex.substring(4, 6), 16);
         const ur = parseInt(userHex.substring(0, 2), 16), ug = parseInt(userHex.substring(2, 4), 16), ub = parseInt(userHex.substring(4, 6), 16);
-        const match = parseFloat(calculateMatch(targetHex, userHex));
-
-        const dr = tr - ur, dg = tg - ug, db = tb - ub;
-        const uMax = Math.max(ur, ug, ub), uMin = Math.min(ur, ug, ub);
-        const tMax = Math.max(tr, tg, tb), tMin = Math.min(tr, tg, tb);
-        const uSat = uMax - uMin, tSat = tMax - tMin;
-
-        // 特殊条件
-        if (match >= 99.5) return "【神業】もはや誤差なし！完璧な色彩感覚です。";
-        if (match >= 98) return "【超惜しい】あとほんの数値を調整するだけ！(明度・彩度ともにほぼ完璧)";
         
-        // 15個から35個以上へ大幅拡張
-        if (tr < 30 && tg < 30 && tb < 30 && uMax > 100) return "【明度DOWN】正解は漆黒に近いです。全ての値を0方向へ！";
-        if (tr > 230 && tg > 230 && tb > 230 && uMin < 150) return "【明度UP】正解はほぼ白です。全ての値をF方向へ一気に上げましょう。";
+        const diffR = tr - ur, diffG = tg - ug, diffB = tb - ub;
+        const absR = Math.abs(diffR), absG = Math.abs(diffG), absB = Math.abs(diffB);
+        const maxDiff = Math.max(absR, absG, absB);
+
+        // 1. 完璧
+        if (maxDiff === 0) return "【完璧】100%一致です！色彩感覚のマスターですね！";
+
+        // 2. 明度：全体的に暗すぎ（もっと明るく）
+        if (diffR > 40 && diffG > 40 && diffB > 40) return "【明度UP】全体的にもっと明るい色です。全ての値を大きくして光を足しましょう。";
         
-        if (tSat < 20 && uSat > 50) return "【彩度DOWN】正解はかなり無機質なグレー系です。RGBの差を無くしましょう。";
-        if (tSat > 150 && uSat < 80) return "【彩度UP】もっと「派手」な色です。一番高い値を大きく、低い値をより小さく！";
+        // 3. 明度：全体的に明るすぎ（もっと暗く）
+        if (diffR < -40 && diffG < -40 && diffB < -40) return "【明度DOWN】全体的にもっと暗い色です。全ての値を小さくして影を強くしましょう。";
 
-        if (dr > 100 && dg > 100 && db < 30) return "【色相：黄】黄色みが圧倒的に足りません！R(左)とG(中)を大幅に増やしましょう。";
-        if (dr > 100 && db > 100 && dg < 30) return "【色相：紫】マゼンタ(紫)が足りません。R(左)とB(右)を強く、G(中)を弱く。";
-        if (dg > 100 && db > 100 && dr < 30) return "【色相：水】シアン(水色)が足りません。G(中)とB(右)を強化、R(左)を削って。";
+        // 4. 彩度：鮮やかすぎ（グレーに近づける）
+        const uAvg = (ur + ug + ub) / 3;
+        const uSat = Math.max(ur, ug, ub) - Math.min(ur, ug, ub);
+        const tSat = Math.max(tr, tg, tb) - Math.min(tr, tg, tb);
+        if (uSat - tSat > 60) return "【彩度DOWN】鮮やかすぎます。各値の差を縮めて、少しグレー（無彩色）に近づけましょう。";
 
-        if (tr > tg && tr > tb && ur < 100) return "【暖色化】もっと暖かみのある色です。R(左)を増やして「熱」を足しましょう。";
-        if (tb > tr && tb > tg && ub < 100) return "【寒色化】もっと冷たい色です。B(右)を増やして「涼しさ」を出しましょう。";
-        
-        if (tr > 80 && tg > 50 && tb < 50 && ur < 50) return "【ブラウン】茶色っぽくするにはRを中程度、Gをその半分、Bをほぼ0にします。";
-        if (tr > 200 && tg < 150 && tb > 150 && ur < 150) return "【ピンク】もっと可愛らしい桃色。Rを最大級に、Bを少し混ぜて明度を上げます。";
-        if (tr < 100 && tg > 150 && tb < 100 && ug < 100) return "【ライム】鮮やかな黄緑。Gを最大に、Rも少し足すと発色が良くなります。";
-        if (tr > 150 && tg > 100 && tb < 80 && ur < 150) return "【オレンジ】Rを最大、Gを半分くらいにすると綺麗な橙色になります。";
+        // 5. 彩度：くすみがち（もっと鮮やかに）
+        if (tSat - uSat > 60) return "【彩度UP】色がくすんでいます。一番大きい値をさらに大きくして、色を強調しましょう。";
 
-        if (Math.abs(dr) < 15 && Math.abs(dg) < 15 && Math.abs(db) < 15) return "【微調整】方向性は合ってます！各値を1段階(1〜2)だけ動かしてみて。";
-        
-        if (uMax > 200 && tMax < 150) return "【明度DOWN】全体的に眩しすぎます。RGB全ての値を数段階下げて落ち着かせて。";
-        if (uMin < 50 && tMin > 100) return "【明度UP】色が沈みすぎています。全体に光を当てるイメージで値を底上げして。";
+        // 6. 色相：赤が足りない（暖色へ）
+        if (diffR > maxDiff * 0.8) return "【色相：赤】赤みが足りません。左2文字を大きくして、温かみ（暖色）を加えましょう。";
 
-        if (dr > 50) return "【赤不足】左2文字が小さいです。もっと赤み(R)を足して色相をずらしましょう。";
-        if (dr < -50) return "【赤過剰】左2文字が大きすぎ。赤みを抑えると、より正解に近づきます。";
-        if (dg > 50) return "【緑不足】真ん中2文字を大きく。緑(G)を足すと色に明るさと鮮やかさが出ます。";
-        if (dg < -50) return "【緑過剰】真ん中を小さく。緑が強すぎて色が偏っています。";
-        if (db > 50) return "【青不足】右2文字を大きく。青(B)を足して深みや冷たさを強調しましょう。";
-        if (db < -50) return "【青過剰】右2文字が強すぎ。青を引いて、他の色の主張を強めてみて。";
+        // 7. 色相：赤が強すぎ（寒色へ）
+        if (diffR < -maxDiff * 0.8) return "【色相：青緑】赤が強すぎます。左2文字を減らして、涼しげな色を目指しましょう。";
 
-        if (match < 50) return "【ヒント】まずは「明るさ」を合わせ、次に「一番強い色」を特定しましょう。";
-        if (match < 70) return "【ヒント】RGBのどれか一つを極端に大きく(F)か小さく(0)すると見えてくるかも。";
-        if (match < 85) return "【彩度】正解はもっと「くすんだ」色ですか？それとも「澄んだ」色ですか？";
-        
-        if (tMax === tr && dr > 20) return "【色相】一番強い成分は「赤」です。Rをもっと攻めてみましょう。";
-        if (tMax === tg && dg > 20) return "【色相】一番強い成分は「緑」です。Gをもっと攻めてみましょう。";
-        if (tMax === tb && db > 20) return "【色相】一番強い成分は「青」です。Bをもっと攻めてみましょう。";
+        // 8. 色相：緑が足りない
+        if (diffG > maxDiff * 0.8) return "【色相：緑】緑が足りません。真ん中の2文字を大きくして、自然な明るさを足しましょう。";
 
-        return "【あと一歩】明るさは近いです。RGBの比率を少しずつ変えて探りましょう。";
+        // 9. 色相：緑が強すぎ
+        if (diffG < -maxDiff * 0.8) return "【色相：紫】緑が強すぎます。真ん中を減らして、赤と青の比率を上げましょう。";
+
+        // 10. 色相：青が足りない
+        if (diffB > maxDiff * 0.8) return "【色相：青】青みが足りません。右2文字を大きくして、深みや透明感を足しましょう。";
+
+        // 11. 色相：青が強すぎ
+        if (diffB < -maxDiff * 0.8) return "【色相：黄】青が強すぎます。右2文字をぐっと減らして、黄色方向に寄せましょう。";
+
+        // 12. 色相：黄色（赤＋緑）が足りない
+        if (diffR > 30 && diffG > 30 && diffB < -20) return "【色相：黄】もっと黄色っぽいです。赤と緑を増やし、青を減らしてみてください。";
+
+        // 13. 色相：紫（赤＋青）が足りない
+        if (diffR > 30 && diffB > 30 && diffG < -20) return "【色相：紫】もっと紫っぽいです。赤と青を増やし、緑を減らしましょう。";
+
+        // 14. 色相：水色（緑＋青）が足りない
+        if (diffG > 30 && diffB > 30 && diffR < -20) return "【色相：水色】もっとシアン寄りです。緑と青を増やし、赤を削りましょう。";
+
+        // 15. 微調整（あと少し）
+        return "【微調整】かなり近いです！あと少し数値を前後させるだけで正解に届きます。";
     }
 
     function updatePreview() {
@@ -374,12 +375,15 @@
             }
         } else {
             previewContainer.classList.remove('active');
-            if (isAnswered) realtimeMatch.textContent = '---%';
+            if (isAnswered) {
+                realtimeMatch.textContent = '---%';
+            }
         }
     }
 
     function initGame() {
         isAnswered = false;
+        submittedColor = '';
         targetColor = generateRandomColor();
         scoreText.classList.remove('show');
         adviceText.classList.remove('show');
@@ -394,6 +398,7 @@
             answerText.textContent = '#' + targetColor;
             answerText.style.color = getContrastColor(targetColor);
             inputField.value = '';
+            inputField.disabled = false;
             updatePreview();
             inputField.focus();
         }, 200);
@@ -405,7 +410,9 @@
             if (userInput.length !== 6) return; 
 
             isAnswered = true;
+            submittedColor = userInput; // 提出時の色を固定
             const match = calculateMatch(targetColor, userInput);
+            
             scoreText.textContent = match + '%';
             scoreText.classList.add('show');
             adviceText.textContent = getDetailedAdvice(targetColor, userInput);
@@ -429,8 +436,10 @@
 
     inputField.addEventListener('input', function() {
         let val = this.value;
-        val = val.toUpperCase().replace(/[^0-9A-F]/g, '');
+        const start = this.selectionStart;
+        val = val.replace(/[Ａ-Ｚａ-ｚ０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0)).toUpperCase().replace(/[^0-9A-F]/g, '');
         this.value = val.substring(0, 6);
+        this.setSelectionRange(start, start);
         updatePreview(); 
     });
 
@@ -458,6 +467,7 @@
             }
         });
         btn.addEventListener('pointerup', () => clearTimeout(delTimer));
+        btn.addEventListener('pointerleave', () => clearTimeout(delTimer));
     });
 
     initGame();
